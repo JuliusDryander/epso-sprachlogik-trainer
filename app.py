@@ -244,16 +244,16 @@ def show_home():
     st.markdown("""
     <div class="eu-header">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="font-size:28px">&#127466;&#127482;</div>
+            <div style="width:44px;height:30px;background:#003399;border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="12" fill="none"/><g fill="#FFD617" transform="translate(14,14)"><g id="s"><polygon points="0,-8 1.8,-2.5 7.6,-2.5 2.9,1 4.7,6.5 0,3.1 -4.7,6.5 -2.9,1 -7.6,-2.5 -1.8,-2.5" transform="scale(0.35)"/></g><use href="#s" transform="rotate(30)"/><use href="#s" transform="rotate(60)"/><use href="#s" transform="rotate(90)"/><use href="#s" transform="rotate(120)"/><use href="#s" transform="rotate(150)"/><use href="#s" transform="rotate(180)"/><use href="#s" transform="rotate(210)"/><use href="#s" transform="rotate(240)"/><use href="#s" transform="rotate(270)"/><use href="#s" transform="rotate(300)"/><use href="#s" transform="rotate(330)"/></g></svg></div>
             <div><h2>Sprachlogisches Denken</h2><p>EPSO AD5 Auswahlverfahren &middot; Deutsch &middot; 1:45 pro Frage</p></div>
         </div>
         <div style="display:flex;gap:16px;font-size:12px;color:rgba(255,255,255,0.6)">
-            <span>&#10022; 30 verifizierte Fragen</span><span>&#129302; KI-generierte Fragen</span><span>&#128202; 6 Fehlertypen</span>
+            <span>&#9733; 30 verifizierte Fragen</span><span>&#9881; KI-generierte Fragen</span><span>&#9638; 6 Fehlertypen</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander("API-Key eingeben (optional, fuer KI-Fragen)"):
+    with st.expander("API-Key eingeben (optional, für KI-Fragen)"):
         api_key = st.text_input("Anthropic API Key", type="password", key="api_key_input", placeholder="sk-ant-...")
         if api_key:
             st.session_state.api_key = api_key
@@ -272,7 +272,7 @@ def show_home():
                 st.session_state.session_size = n
                 st.rerun()
 
-    st.caption(f"{remaining}/{len(VERIFIED)} verifizierte Fragen verfuegbar")
+    st.caption(f"{remaining}/{len(VERIFIED)} verifizierte Fragen verfügbar")
 
     if st.button("Session starten", type="primary", use_container_width=True):
         st.session_state.session = []
@@ -330,7 +330,7 @@ def show_question():
         mins = secs = 0
         t_class = ""
 
-    streak_html = f' <span style="font-size:11px;background:#FFD617;padding:2px 6px;font-weight:bold">&#128293; {st.session_state.streak}</span>' if st.session_state.streak >= 3 else ""
+    streak_html = f' <span style="font-size:11px;background:#FFD617;padding:2px 6px;font-weight:bold">* {st.session_state.streak}</span>' if st.session_state.streak >= 3 else ""
 
     st.markdown(f"""
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:2px solid #004494;margin-bottom:12px">
@@ -348,7 +348,7 @@ def show_question():
     if q.get("source") in ["EPSO Official", "Übungsfragen DE"]:
         st.markdown(f'<span class="eu-src-badge eu-src-verified">&#10022; {q["source"]}</span>', unsafe_allow_html=True)
     else:
-        st.markdown('<span class="eu-src-badge eu-src-ai">&#129302; KI-generiert</span>', unsafe_allow_html=True)
+        st.markdown('<span class="eu-src-badge eu-src-ai">KI-generiert</span>', unsafe_allow_html=True)
 
     st.markdown(f'<div class="eu-textbox">{q["text"]}</div>', unsafe_allow_html=True)
 
@@ -424,7 +424,7 @@ def show_question():
                 st.session_state.screen = "results"
                 st.rerun()
         else:
-            if st.button("Naechste Frage", type="primary", use_container_width=True):
+            if st.button("Nächste Frage", type="primary", use_container_width=True):
                 nq = get_next_question()
                 if nq:
                     st.session_state.current_q = nq
@@ -439,7 +439,7 @@ def show_results():
     pct = round((ok / len(session)) * 100) if session else 0
     avg_time = round(sum(q.get("time", 0) for q in session) / len(session)) if session else 0
     verified = sum(1 for q in session if q.get("source") in ["EPSO Official", "Übungsfragen DE"])
-    emoji = "&#127919;" if pct >= 80 else ("&#128200;" if pct >= 60 else ("&#128170;" if pct >= 50 else "&#128260;"))
+    emoji = "&#9733;" if pct >= 80 else ("&#9650;" if pct >= 60 else ("&#9654;" if pct >= 50 else "&#8634;"))
 
     st.markdown(f"""
     <div class="eu-header" style="text-align:center">
@@ -461,11 +461,11 @@ def show_results():
 
     if len(session) == 20:
         if ok >= 17: st.success("Exzellent!")
-        elif ok >= 14: st.success("Wettbewerbsfaehig")
+        elif ok >= 14: st.success("Wettbewerbsfähig")
         elif ok >= 10: st.warning("Bestanden (min. 10/20)")
         else: st.error(f"Nicht bestanden ({ok}/20)")
 
-    items_html = '<div class="eu-card"><div class="eu-card-label">Uebersicht</div>'
+    items_html = '<div class="eu-card"><div class="eu-card-label">Übersicht</div>'
     for q in session:
         ic = "eu-result-ok" if q.get("ok") else "eu-result-fail"
         sym = "&#10003;" if q.get("ok") else "&#10007;"
