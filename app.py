@@ -130,6 +130,10 @@ if "screen" not in st.session_state:
     st.session_state.screen = "home"
 if "session_size" not in st.session_state:
     st.session_state.session_size = 10
+if "mode" not in st.session_state:
+    st.session_state.mode = "mixed"  # "verified", "ai", "mixed"
+if "session_used_ids" not in st.session_state:
+    st.session_state.session_used_ids = []  # tracks IDs used in CURRENT session
 
 
 # ── EU Design System Styling ──
@@ -227,17 +231,55 @@ div[data-testid="stProgress"] > div > div { height:6px !important; border-radius
 """, unsafe_allow_html=True)
 
 def get_next_question():
-    available = [q for q in VERIFIED if q["id"] not in st.session_state.used_ids]
-    if available and random.random() < 0.65:
+    mode = st.session_state.mode
+    used_in_session = st.session_state.session_used_ids
+    api_key = st.session_state.get("api_key", "")
+
+    # Mode: AI only
+    if mode == "ai":
+        if api_key:
+            prev = ", ".join([q.get("text", "")[:25] for q in st.session_state.session[-3:]])
+            q = generate_ai_question(api_key, prev)
+            if q:
+                st.session_state.session_used_ids.append(q["id"])
+            return q
+        else:
+            st.error("Kein API-Key eingegeben. Bitte zuerst auf der Startseite eingeben.")
+            return None
+
+    # Mode: Verified only
+    if mode == "verified":
+        available = [q for q in VERIFIED if q["id"] not in used_in_session]
+        if available:
+            q = random.choice(available)
+            st.session_state.session_used_ids.append(q["id"])
+            st.session_state.used_ids.append(q["id"])
+            return q
+        # All used in this session — reset and pick again
+        available = VERIFIED[:]
         q = random.choice(available)
+        st.session_state.session_used_ids.append(q["id"])
+        return q
+
+    # Mode: Mixed (default)
+    available = [q for q in VERIFIED if q["id"] not in used_in_session]
+    if available and (random.random() < 0.65 or not api_key):
+        q = random.choice(available)
+        st.session_state.session_used_ids.append(q["id"])
         st.session_state.used_ids.append(q["id"])
         return q
-    api_key = st.session_state.get("api_key", "")
+
     if api_key:
         prev = ", ".join([q.get("text", "")[:25] for q in st.session_state.session[-3:]])
-        return generate_ai_question(api_key, prev)
+        q = generate_ai_question(api_key, prev)
+        if q:
+            st.session_state.session_used_ids.append(q["id"])
+        return q
+
+    # Fallback: pick from verified even if used this session (shouldn't happen with 30 questions and max 20 session)
     if VERIFIED:
-        return random.choice(VERIFIED)
+        q = random.choice(VERIFIED)
+        return q
     return None
 
 def show_home():
@@ -253,18 +295,42 @@ def show_home():
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander("API-Key eingeben (optional, für KI-Fragen)"):
-        api_key = st.text_input("Anthropic API Key", type="password", key="api_key_input", placeholder="sk-ant-...")
-        if api_key:
-            st.session_state.api_key = api_key
-            st.success("KI-Fragen aktiviert")
-        else:
-            st.caption("Ohne Key: 30 verifizierte Fragen im Rotationsverfahren.")
+    # Auto-detect API key from Streamlit Secrets or manual input
+    secret_key = None
+    try:
+        secret_key = st.secrets.get("ANTHROPIC_API_KEY", None)
+    except Exception:
+        pass
+
+    if secret_key:
+        st.session_state.api_key = secret_key
+        st.markdown('<div style="background:#defbe6;border-left:4px solid #008a00;padding:8px 14px;font-size:13px;color:#044317;margin-bottom:12px">&#10003; KI-Fragen aktiviert (API-Key aus Secrets)</div>', unsafe_allow_html=True)
+    else:
+        with st.expander("API-Key eingeben (optional, für KI-Fragen)"):
+            api_key = st.text_input("Anthropic API Key", type="password", key="api_key_input", placeholder="sk-ant-...")
+            if api_key:
+                st.session_state.api_key = api_key
+                st.success("KI-Fragen aktiviert")
+            else:
+                st.caption("Ohne Key: 30 verifizierte Fragen. Für KI-Fragen API-Key eingeben oder in Streamlit Secrets hinterlegen.")
 
     remaining = len([q for q in VERIFIED if q["id"] not in st.session_state.used_ids])
     current = st.session_state.session_size
 
-    st.markdown("**Session konfigurieren**")
+    st.markdown("**Modus**")
+    mode_cols = st.columns(3)
+    modes = [("verified", "Verifiziert"), ("ai", "Nur KI"), ("mixed", "Gemischt")]
+    for i, (mode_key, mode_label) in enumerate(modes):
+        with mode_cols[i]:
+            btn_type = "primary" if st.session_state.mode == mode_key else "secondary"
+            if st.button(mode_label, key=f"mode_{mode_key}", type=btn_type):
+                st.session_state.mode = mode_key
+                st.rerun()
+
+    if st.session_state.mode == "ai" and not st.session_state.get("api_key"):
+        st.warning("Für den KI-Modus bitte oben einen API-Key eingeben.")
+
+    st.markdown("**Anzahl Fragen**")
     cols = st.columns(4)
     for i, n in enumerate([5, 10, 15, 20]):
         with cols[i]:
@@ -272,10 +338,12 @@ def show_home():
                 st.session_state.session_size = n
                 st.rerun()
 
-    st.caption(f"{remaining}/{len(VERIFIED)} verifizierte Fragen verfügbar")
+    mode_text = {"verified": "verifizierte", "ai": "KI-generierte", "mixed": "gemischte"}
+    st.caption(f"{remaining}/{len(VERIFIED)} verifizierte Fragen verfügbar · Modus: {mode_text.get(st.session_state.mode, 'gemischt')}")
 
     if st.button("Session starten", type="primary", use_container_width=True):
         st.session_state.session = []
+        st.session_state.session_used_ids = []  # Reset duplicate tracker
         st.session_state.screen = "question"
         q = get_next_question()
         if q:
@@ -311,6 +379,13 @@ def show_home():
             st.markdown(html, unsafe_allow_html=True)
 
 def show_question():
+    # Home button at top
+    if st.button("← Startseite", key="home_from_q"):
+        st.session_state.screen = "home"
+        st.session_state.session = []
+        st.session_state.session_used_ids = []
+        st.rerun()
+
     q = st.session_state.current_q
     if not q:
         st.session_state.screen = "home"
@@ -333,17 +408,15 @@ def show_question():
     streak_html = f' <span style="font-size:11px;background:#FFD617;padding:2px 6px;font-weight:bold">* {st.session_state.streak}</span>' if st.session_state.streak >= 3 else ""
 
     st.markdown(f"""
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:2px solid #004494;margin-bottom:12px">
-        <div style="font-size:14px;color:#6b6b6b">Frage <strong style="color:#004494;font-size:20px">{len(session)+1}</strong> / {size}</div>
-        <div class="eu-timer {t_class}">{f'{mins}:{secs:02d}' if not st.session_state.answered else '&mdash;'}</div>
-        <div style="font-size:14px"><span class="eu-green" style="font-weight:bold">{s['correct']}</span> <span style="color:#bfbfbf">|</span> <span class="eu-red" style="font-weight:bold">{s['wrong']+s['timeout']}</span>{streak_html}</div>
+    <div style="position:sticky;top:0;z-index:999;background:white;padding:8px 0 0;margin:-1rem -1rem 12px;padding-left:1rem;padding-right:1rem;box-shadow:0 2px 4px rgba(0,0,0,0.08)">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:2px solid #004494">
+            <div style="font-size:14px;color:#6b6b6b">Frage <strong style="color:#004494;font-size:20px">{len(session)+1}</strong> / {size}</div>
+            <div class="eu-timer {t_class}">{f'{mins}:{secs:02d}' if not st.session_state.answered else '&mdash;'}</div>
+            <div style="font-size:14px"><span class="eu-green" style="font-weight:bold">{s['correct']}</span> <span style="color:#bfbfbf">|</span> <span class="eu-red" style="font-weight:bold">{s['wrong']+s['timeout']}</span>{streak_html}</div>
+        </div>
+        {f'<div style="height:3px;background:#e8e8e8;margin-top:4px"><div style="height:3px;width:{remaining/TIME_LIMIT*100}%;background:{"#008a00" if remaining > 60 else ("#e07000" if remaining > 30 else "#da1e28")};transition:width 1s linear"></div></div>' if not st.session_state.answered else ''}
     </div>
     """, unsafe_allow_html=True)
-
-    if not st.session_state.answered:
-        pct = remaining / TIME_LIMIT
-        color = "#008a00" if remaining > 60 else ("#e07000" if remaining > 30 else "#da1e28")
-        st.markdown(f'<div style="height:3px;background:#e8e8e8;margin-bottom:16px"><div style="height:3px;width:{pct*100}%;background:{color};transition:width 1s linear"></div></div>', unsafe_allow_html=True)
 
     if q.get("source") in ["EPSO Official", "Übungsfragen DE"]:
         st.markdown(f'<span class="eu-src-badge eu-src-verified">&#10022; {q["source"]}</span>', unsafe_allow_html=True)
@@ -506,6 +579,7 @@ def show_results():
     with col1:
         if st.button("Neue Session", type="primary", use_container_width=True):
             st.session_state.session = []
+            st.session_state.session_used_ids = []
             st.session_state.screen = "question"
             nq = get_next_question()
             if nq:
@@ -517,6 +591,7 @@ def show_results():
     with col2:
         if st.button("Startseite", use_container_width=True):
             st.session_state.session = []
+            st.session_state.session_used_ids = []
             st.session_state.screen = "home"
             st.rerun()
 
