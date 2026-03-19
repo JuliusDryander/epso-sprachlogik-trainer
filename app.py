@@ -72,36 +72,59 @@ def generate_ai_question(api_key, previous_topics=""):
         import anthropic
         client = anthropic.Anthropic(api_key=api_key)
 
-        system = """Du bist EPSO-Testentwickler für AD5-Sprachlogik (Deutsch). Generiere eine Aufgabe.
+        # Randomize parameters for variety
+        text_length = random.choice(["kurz (80-100 Wörter)", "mittel (120-150 Wörter)", "lang (160-200 Wörter)"])
+        opt_style = random.choice([
+            "Manche Optionen kurz (1 Satz), manche lang (2 Sätze).",
+            "Alle Optionen ca. gleich lang (1-2 Sätze).",
+            "Die richtige Antwort ist die längste Option.",
+            "Die richtige Antwort ist die kürzeste Option."
+        ])
+        trap = random.choice(["CHRONOLOGIE", "KAUSALITAET", "QUANTITAET", "NICHT_IM_TEXT", "GEWICHTUNG", "GENERALISIERUNG"])
+        topic_pool = random.choice([
+            "EU-Politik, Umweltregulierung oder Klimaschutz",
+            "Wissenschaft, Biologie oder Medizin",
+            "Geschichte, Archäologie oder Kultur",
+            "Wirtschaft, Handel oder Finanzen",
+            "Technologie, KI oder Digitalisierung",
+            "Geographie, Städteplanung oder Verkehr",
+            "Bildung, Forschung oder Universitäten",
+            "Ernährung, Landwirtschaft oder Lebensmittel",
+            "Recht, Menschenrechte oder Justiz",
+            "Astronomie, Physik oder Chemie"
+        ])
 
-EPSO-REGELN:
-- Text: ca. 130 Wörter, sachlich
+        system = f"""Du bist EPSO-Testentwickler für AD5-Sprachlogik (Deutsch). Erstelle EINE Aufgabe.
+
+REGELN:
+- Textlänge: {text_length}
+- Thema: {topic_pool}
+- {opt_style}
+- Hauptfalle: {trap}
 - Frage: "Welche Antwort kann am besten aus dem Text abgeleitet werden?"
-- 4 Optionen (A/B/C/D), genau EINE richtig
-- Allgemeinwissen spielt KEINE Rolle
+- 4 Optionen (A/B/C/D), genau EINE richtig, Position der richtigen Antwort variieren
+- Allgemeinwissen spielt KEINE Rolle — nur der Text zählt
+- Jede falsche Option nutzt einen der 6 Nicht-Übereinstimmungstypen:
+  CHRONOLOGIE (falscher Zeitablauf), KAUSALITAET (falsche Ursache-Wirkung),
+  QUANTITAET (falsche Mengen), NICHT_IM_TEXT (plausibel aber nicht erwähnt),
+  GEWICHTUNG ("hauptsächlich/nur/vor allem"), GENERALISIERUNG ("Viele"->"Alle")
 
-DIE 6 NICHT-ÜBEREINSTIMMUNGSTYPEN für falsche Optionen:
-1. CHRONOLOGIE: Falscher zeitlicher Ablauf
-2. KAUSALITAET: Falsche Ursache-Wirkung
-3. QUANTITAET: Falsche Mengen/Zahlen
-4. NICHT_IM_TEXT: Plausibel aber nicht im Text
-5. GEWICHTUNG: "hauptsächlich/nur/vor allem" wo Text gleichwertig
-6. GENERALISIERUNG: "Viele" → "Alle", "Einige" → "Jeder"
+WICHTIG: Erstelle einen EINZIGARTIGEN Text. Vermeide folgende bereits verwendete Themen: {previous_topics}
 
-FORMAT (NUR JSON):
-{"text":"...","question_type":"correct","options":[{"letter":"A","statement":"..."},{"letter":"B","statement":"..."},{"letter":"C","statement":"..."},{"letter":"D","statement":"..."}],"correct":"B","explanation":"...","trap_type":"KAUSALITAET"}"""
+FORMAT (NUR JSON, kein anderer Text):
+{{"text":"...","question_type":"correct","options":[{{"letter":"A","statement":"..."}},{{"letter":"B","statement":"..."}},{{"letter":"C","statement":"..."}},{{"letter":"D","statement":"..."}}],"correct":"B","explanation":"...","trap_type":"{trap}"}}"""
 
         msg = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=1500,
+            max_tokens=2000,
             system=system,
-            messages=[{"role": "user", "content": f"Neue Aufgabe. Themen vermeiden: {previous_topics}. NUR JSON."}]
+            messages=[{"role": "user", "content": "Generiere die Aufgabe. NUR JSON."}]
         )
         text = msg.content[0].text.strip()
         text = text.replace("```json", "").replace("```", "").strip()
         q = json.loads(text)
         q["source"] = "KI-generiert"
-        q["id"] = f"ai-{int(time.time())}"
+        q["id"] = f"ai-{int(time.time())}-{random.randint(1000,9999)}"
         if "question_type" not in q:
             q["question_type"] = "correct"
         return q
@@ -138,289 +161,94 @@ if "session_used_ids" not in st.session_state:
 
 
 # ══════════════════════════════════════════════════
-# UI LAYER — Gamified EU Design
+# UI — Gamified EU Design (Streamlit-native rendering)
 # ══════════════════════════════════════════════════
 
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-:root {
-    --eu-blue: #004494;
-    --eu-blue-dark: #003068;
-    --eu-blue-light: #e8f0fe;
-    --eu-yellow: #FFD617;
-    --eu-green: #0d7c3f;
-    --eu-red: #c0272d;
-    --eu-orange: #d4620a;
-    --eu-grey: #404040;
-    --eu-grey-light: #f4f5f7;
-    --radius: 12px;
-}
-
 .stApp { max-width: 680px; margin: 0 auto; font-family: 'Inter', Arial, sans-serif; }
 [data-testid="stHeader"] { background: transparent; }
 footer, #MainMenu { display: none; }
 .block-container { padding-top: 1rem; padding-bottom: 2rem; }
 
-/* ── HERO HEADER ── */
-.hero {
-    background: linear-gradient(135deg, #003068 0%, #004494 60%, #1a5ab8 100%);
-    color: white; padding: 32px 28px 24px; margin: -1rem -1rem 20px;
-    position: relative; overflow: hidden;
-}
-.hero::after {
-    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-    height: 4px; background: var(--eu-yellow);
-}
-.hero .stars {
-    position: absolute; top: 16px; right: 20px; opacity: 0.08;
-    font-size: 120px; line-height: 1;
-}
-.hero h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.5px; }
+.hero { background: linear-gradient(135deg, #003068 0%, #004494 60%, #1a5ab8 100%); color: white; padding: 32px 28px 24px; margin: -1rem -1rem 20px; position: relative; overflow: hidden; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #FFD617; }
+.hero h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.5px; color: white; }
 .hero .sub { color: rgba(255,255,255,0.65); font-size: 13px; margin: 0 0 16px; }
 .hero .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-.hero .chip {
-    background: rgba(255,255,255,0.12); backdrop-filter: blur(4px);
-    padding: 5px 12px; border-radius: 20px; font-size: 11px;
-    color: rgba(255,255,255,0.85); font-weight: 500;
-    border: 1px solid rgba(255,255,255,0.1);
-}
+.hero .chip { background: rgba(255,255,255,0.12); padding: 5px 12px; border-radius: 20px; font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 500; border: 1px solid rgba(255,255,255,0.1); }
 
-/* ── CARDS ── */
-.g-card {
-    background: white; border-radius: var(--radius); padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
-    border: 1px solid #eef0f2; margin-bottom: 14px;
-}
-.g-card-label {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1.5px; color: #8993a4; margin-bottom: 14px;
-}
-
-/* ── MODE SELECTOR (pill style) ── */
-.mode-row { display: flex; gap: 0; background: var(--eu-grey-light); border-radius: 10px; padding: 3px; margin: 8px 0 16px; }
-.mode-pill {
-    flex: 1; text-align: center; padding: 10px 0; border-radius: 8px;
-    font-size: 13px; font-weight: 600; color: #6b7280;
-    cursor: pointer; transition: all 0.2s;
-}
-.mode-pill.active {
-    background: var(--eu-blue); color: white;
-    box-shadow: 0 2px 8px rgba(0,68,148,0.3);
-}
-
-/* ── SIZE SELECTOR ── */
-.size-row { display: flex; gap: 6px; margin: 8px 0 16px; }
-.size-pill {
-    flex: 1; text-align: center; padding: 10px 0; border-radius: 8px;
-    font-size: 15px; font-weight: 700; color: #8993a4; background: var(--eu-grey-light);
-    border: 2px solid transparent; cursor: pointer; transition: all 0.15s;
-}
-.size-pill.active {
-    background: white; color: var(--eu-blue);
-    border-color: var(--eu-blue); box-shadow: 0 0 0 3px rgba(0,68,148,0.1);
-}
-
-/* ── METRICS (gamified) ── */
+.g-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #eef0f2; margin-bottom: 14px; }
+.g-card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #8993a4; margin-bottom: 14px; }
 .g-metrics { display: flex; gap: 8px; margin: 12px 0; }
-.g-stat {
-    flex: 1; text-align: center; background: var(--eu-grey-light);
-    border-radius: 10px; padding: 14px 6px;
-    transition: transform 0.15s;
-}
-.g-stat:hover { transform: translateY(-2px); }
+.g-stat { flex: 1; text-align: center; background: #f4f5f7; border-radius: 10px; padding: 14px 6px; }
 .g-stat .num { font-size: 24px; font-weight: 800; line-height: 1; }
 .g-stat .label { font-size: 9px; color: #8993a4; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
-.g-green { color: var(--eu-green); }
-.g-red { color: var(--eu-red); }
-.g-orange { color: var(--eu-orange); }
-.g-blue { color: var(--eu-blue); }
+.xp-bar { background: #eef0f2; border-radius: 6px; height: 8px; overflow: hidden; margin: 6px 0; }
+.xp-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #004494, #1a5ab8); transition: width 0.5s ease; }
 
-/* ── BUTTONS (answer options) ── */
-div[data-testid="stButton"] > button {
-    width: 100%; text-align: left !important;
-    padding: 16px 20px !important; border-radius: 10px !important;
-    border: 2px solid #e5e7eb !important;
-    background: white !important; font-size: 14px !important;
-    color: #1f2937 !important; font-weight: 500 !important;
-    transition: all 0.15s ease !important; line-height: 1.55 !important;
-    margin-bottom: 6px !important; font-family: 'Inter', Arial, sans-serif !important;
-    min-height: 68px !important; display: flex !important; align-items: center !important;
-}
-div[data-testid="stButton"] > button:hover {
-    border-color: var(--eu-blue) !important; background: var(--eu-blue-light) !important;
-    color: var(--eu-blue) !important; transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,68,148,0.1);
-}
+div[data-testid="stButton"] > button { width: 100%; text-align: left !important; padding: 16px 20px !important; border-radius: 10px !important; border: 2px solid #e5e7eb !important; background: white !important; font-size: 14px !important; color: #1f2937 !important; font-weight: 500 !important; transition: all 0.15s ease !important; line-height: 1.55 !important; margin-bottom: 6px !important; font-family: 'Inter', Arial, sans-serif !important; min-height: 68px !important; }
+div[data-testid="stButton"] > button:hover { border-color: #004494 !important; background: #e8f0fe !important; color: #004494 !important; }
+div[data-testid="stButton"] > button[kind="primary"] { background: linear-gradient(135deg, #003068, #004494) !important; color: white !important; border: none !important; font-weight: 700 !important; padding: 16px 24px !important; font-size: 15px !important; min-height: 52px !important; border-radius: 10px !important; box-shadow: 0 4px 14px rgba(0,68,148,0.25) !important; }
+div[data-testid="stButton"] > button[kind="primary"]:hover { box-shadow: 0 6px 20px rgba(0,68,148,0.35) !important; }
 
-/* Primary button */
-div[data-testid="stButton"] > button[kind="primary"] {
-    background: linear-gradient(135deg, #003068 0%, #004494 100%) !important;
-    color: white !important; border: none !important;
-    font-weight: 700 !important; padding: 16px 24px !important;
-    font-size: 15px !important; min-height: 52px !important;
-    border-radius: 10px !important;
-    box-shadow: 0 4px 14px rgba(0,68,148,0.25) !important;
-    letter-spacing: 0.3px;
-}
-div[data-testid="stButton"] > button[kind="primary"]:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0,68,148,0.35) !important;
-}
+.g-ans { padding: 16px 20px; margin: 5px 0; border-radius: 10px; font-size: 14px; min-height: 68px; display: flex; align-items: center; line-height: 1.55; font-weight: 500; }
+.g-ans-ok { background: #ecfdf5; border: 2px solid #0d7c3f; color: #065f46; }
+.g-ans-bad { background: #fef2f2; border: 2px solid #c0272d; color: #7f1d1d; }
+.g-ans-skip { background: #f9fafb; border: 1px solid #e5e7eb; color: #9ca3af; }
 
-/* ── TIMER ── */
-.g-timer-bar {
-    position: sticky; top: 0; z-index: 999;
-    background: white; padding: 10px 0 0;
-    margin: -1rem -1rem 14px; padding-left: 1rem; padding-right: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-radius: 0 0 12px 12px;
-}
-.g-timer-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding-bottom: 8px;
-}
-.g-timer-num {
-    font-size: 36px; font-weight: 800; font-variant-numeric: tabular-nums;
-    letter-spacing: -1px;
-}
-.g-timer-ok { color: var(--eu-green); }
-.g-timer-warn { color: var(--eu-orange); }
-.g-timer-danger { color: var(--eu-red); animation: pulse 0.8s ease-in-out infinite; }
-@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
-.g-progress {
-    height: 4px; background: #eef0f2; border-radius: 2px; margin-bottom: 10px; overflow: hidden;
-}
-.g-progress-fill { height: 100%; border-radius: 2px; transition: width 1s linear; }
+.g-explain { background: white; border-radius: 12px; border: 1px solid #eef0f2; padding: 20px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.g-badge-y { display: inline-block; background: #FFD617; color: #1f2937; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+.g-tip { background: #e8f0fe; border-left: 3px solid #004494; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; color: #004494; margin-top: 12px; font-weight: 500; }
 
-/* ── ANSWER STATES ── */
-.g-ans {
-    padding: 16px 20px; margin: 5px 0; border-radius: 10px;
-    font-size: 14px; min-height: 68px; display: flex; align-items: center;
-    line-height: 1.55; font-weight: 500;
-}
-.g-ans-correct { background: #ecfdf5; border: 2px solid var(--eu-green); color: #065f46; }
-.g-ans-wrong { background: #fef2f2; border: 2px solid var(--eu-red); color: #7f1d1d; }
-.g-ans-neutral { background: #f9fafb; border: 1px solid #e5e7eb; color: #9ca3af; }
-
-/* ── EXPLANATION BOX ── */
-.g-explain {
-    background: white; border-radius: var(--radius);
-    border: 1px solid #eef0f2; padding: 20px; margin: 16px 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.g-explain-badge {
-    display: inline-block; background: var(--eu-yellow); color: #1f2937;
-    padding: 4px 12px; border-radius: 6px; font-size: 11px;
-    font-weight: 700; margin-bottom: 10px; letter-spacing: 0.3px;
-}
-.g-explain-tip {
-    background: var(--eu-blue-light); border-left: 3px solid var(--eu-blue);
-    padding: 10px 14px; border-radius: 0 8px 8px 0;
-    font-size: 13px; color: var(--eu-blue); margin-top: 12px; font-weight: 500;
-}
-
-/* ── BADGES ── */
-.g-badge {
-    display: inline-block; padding: 4px 10px; border-radius: 6px;
-    font-size: 11px; font-weight: 600;
-}
-.g-badge-verified { background: var(--eu-blue-light); color: var(--eu-blue); }
-.g-badge-ai { background: #f3e8ff; color: #7c3aed; }
-
-/* ── STREAK BADGE ── */
-.g-streak {
-    display: inline-flex; align-items: center; gap: 3px;
-    background: linear-gradient(135deg, #f59e0b, #ef4444);
-    color: white; padding: 3px 8px; border-radius: 6px;
-    font-size: 11px; font-weight: 700;
-}
-
-/* ── RESULT ITEMS ── */
-.g-result-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px;
-}
-.g-result-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
-.g-dot-ok { background: var(--eu-green); }
-.g-dot-fail { background: var(--eu-red); }
-
-/* ── XP BAR ── */
-.g-xp-bar {
-    background: #eef0f2; border-radius: 6px; height: 8px; overflow: hidden; margin: 6px 0;
-}
-.g-xp-fill {
-    height: 100%; border-radius: 6px;
-    background: linear-gradient(90deg, var(--eu-blue), #1a5ab8);
-    transition: width 0.5s ease;
-}
-
-/* Override Streamlit progress */
 div[data-testid="stProgress"] > div > div { height: 8px !important; border-radius: 6px !important; }
 [data-testid="stMetric"] { display: none; }
 
-/* ── HOME BUTTON ── */
-.g-home-btn {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 12px; color: #8993a4; font-weight: 600;
-    cursor: pointer; padding: 4px 0; margin-bottom: 4px;
-}
-.g-home-btn:hover { color: var(--eu-blue); }
-
-/* ── RESULT HEADER ── */
-.g-result-hero {
-    background: linear-gradient(135deg, #003068 0%, #004494 60%, #1a5ab8 100%);
-    color: white; text-align: center; padding: 36px 24px 28px;
-    margin: -1rem -1rem 20px; position: relative;
-}
-.g-result-hero::after {
-    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-    height: 4px; background: var(--eu-yellow);
-}
-.g-result-hero .big { font-size: 56px; font-weight: 800; }
-.g-result-hero h2 { font-size: 20px; font-weight: 700; color: white; margin: 4px 0 0; }
-.g-result-hero .sub { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 4px; }
+.result-hero { background: linear-gradient(135deg, #003068, #004494, #1a5ab8); color: white; text-align: center; padding: 36px 24px 28px; margin: -1rem -1rem 20px; position: relative; }
+.result-hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #FFD617; }
+.result-hero h2 { font-size: 20px; font-weight: 700; color: white; margin: 4px 0 0; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Helpers ──
 def get_next_question():
     mode = st.session_state.mode
-    used_in_session = st.session_state.session_used_ids
+    used = st.session_state.session_used_ids
     api_key = st.session_state.get("api_key", "")
+
     if mode == "ai":
-        if api_key:
-            prev = ", ".join([q.get("text", "")[:25] for q in st.session_state.session[-3:]])
-            q = generate_ai_question(api_key, prev)
-            if q: st.session_state.session_used_ids.append(q["id"])
-            return q
-        else:
+        if not api_key:
             st.error("Kein API-Key. Bitte auf der Startseite eingeben.")
             return None
-    if mode == "verified":
-        available = [q for q in VERIFIED if q["id"] not in used_in_session]
-        if not available: available = VERIFIED[:]
-        q = random.choice(available)
-        st.session_state.session_used_ids.append(q["id"])
-        st.session_state.used_ids.append(q["id"])
+        prev = ", ".join([q.get("text", "")[:30] for q in st.session_state.session[-3:]])
+        q = generate_ai_question(api_key, prev)
+        if q:
+            used.append(q["id"])
         return q
+
+    if mode == "verified":
+        avail = [q for q in VERIFIED if q["id"] not in used]
+        if not avail:
+            avail = VERIFIED[:]
+        q = random.choice(avail)
+        used.append(q["id"])
+        return q
+
     # mixed
-    available = [q for q in VERIFIED if q["id"] not in used_in_session]
-    if available and (random.random() < 0.65 or not api_key):
-        q = random.choice(available)
-        st.session_state.session_used_ids.append(q["id"])
-        st.session_state.used_ids.append(q["id"])
+    avail = [q for q in VERIFIED if q["id"] not in used]
+    if avail and (random.random() < 0.65 or not api_key):
+        q = random.choice(avail)
+        used.append(q["id"])
         return q
     if api_key:
-        prev = ", ".join([q.get("text", "")[:25] for q in st.session_state.session[-3:]])
+        prev = ", ".join([q.get("text", "")[:30] for q in st.session_state.session[-3:]])
         q = generate_ai_question(api_key, prev)
-        if q: st.session_state.session_used_ids.append(q["id"])
+        if q:
+            used.append(q["id"])
         return q
     if VERIFIED:
-        q = random.choice(VERIFIED)
-        return q
+        return random.choice(VERIFIED)
     return None
 
 def start_session():
@@ -442,25 +270,12 @@ def go_home():
     st.rerun()
 
 # ══════════════════════════════════════════════════
-# HOME SCREEN
+# HOME
 # ══════════════════════════════════════════════════
 def show_home():
-    # Hero
-    st.markdown("""
-    <div class="hero">
-        <div class="stars">&#9734;</div>
-        <h1>Sprachlogisches Denken</h1>
-        <p class="sub">EPSO AD5 Auswahlverfahren &middot; Verbal Reasoning &middot; Deutsch</p>
-        <div class="chips">
-            <span class="chip">&#9733; 30 verifizierte Fragen</span>
-            <span class="chip">&#9881; KI-generierte Fragen</span>
-            <span class="chip">1:45 pro Frage</span>
-            <span class="chip">6 Fehlertypen</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("""<div class="hero"><h1>Sprachlogisches Denken</h1><p class="sub">EPSO AD5 Auswahlverfahren &middot; Verbal Reasoning &middot; Deutsch</p><div class="chips"><span class="chip">30 verifizierte Fragen</span><span class="chip">KI-generierte Fragen</span><span class="chip">1:45 pro Frage</span><span class="chip">6 Fehlertypen</span></div></div>""", unsafe_allow_html=True)
 
-    # API Key detection
+    # API Key
     secret_key = None
     try:
         secret_key = st.secrets.get("ANTHROPIC_API_KEY", None)
@@ -475,47 +290,32 @@ def show_home():
                 st.session_state.api_key = api_key
 
     has_api = bool(st.session_state.get("api_key"))
+    if has_api:
+        st.success("KI-Fragen aktiviert")
 
-    # Config card
-    remaining = len([q for q in VERIFIED if q["id"] not in st.session_state.used_ids])
-    current_mode = st.session_state.mode
-    current_size = st.session_state.session_size
-
-    # Mode selector
-    st.markdown('<div class="g-card"><div class="g-card-label">Trainingsmodus</div>', unsafe_allow_html=True)
+    # Mode
+    st.markdown("**Trainingsmodus**")
     mode_cols = st.columns(3)
-    modes = [("verified", "Verifiziert"), ("ai", "Nur KI"), ("mixed", "Gemischt")]
-    for i, (mk, ml) in enumerate(modes):
+    for i, (mk, ml) in enumerate([("verified", "Verifiziert"), ("ai", "Nur KI"), ("mixed", "Gemischt")]):
         with mode_cols[i]:
-            disabled = (mk == "ai" and not has_api)
-            tp = "primary" if current_mode == mk else "secondary"
-            label = ml + (" *" if mk == "ai" and not has_api else "")
-            if st.button(label, key=f"m_{mk}", type=tp, disabled=disabled, use_container_width=True):
+            dis = (mk == "ai" and not has_api)
+            tp = "primary" if st.session_state.mode == mk else "secondary"
+            if st.button(ml, key=f"m_{mk}", type=tp, disabled=dis, use_container_width=True):
                 st.session_state.mode = mk
                 st.rerun()
 
-    mode_desc = {"verified": "30 handgepruefte EPSO-Fragen", "ai": "Unbegrenzte neue Fragen via Claude", "mixed": "Beste Mischung aus beidem"}
-    st.markdown(f'<div style="font-size:12px;color:#8993a4;margin-top:4px">{mode_desc.get(current_mode, "")}</div></div>', unsafe_allow_html=True)
-
-    # Size selector
-    st.markdown('<div class="g-card"><div class="g-card-label">Anzahl Fragen</div>', unsafe_allow_html=True)
-    size_html = '<div class="size-row">'
-    for n in [5, 10, 15, 20]:
-        active = "active" if n == current_size else ""
-        size_html += f'<div class="size-pill {active}">{n}</div>'
-    size_html += '</div></div>'
-    st.markdown(size_html, unsafe_allow_html=True)
-
-    cols = st.columns(4)
+    # Size
+    st.markdown("**Anzahl Fragen**")
+    size_cols = st.columns(4)
     for i, n in enumerate([5, 10, 15, 20]):
-        with cols[i]:
-            if st.button(str(n), key=f"s_{n}", type="primary" if current_size == n else "secondary"):
+        with size_cols[i]:
+            tp = "primary" if st.session_state.session_size == n else "secondary"
+            if st.button(str(n), key=f"s_{n}", type=tp):
                 st.session_state.session_size = n
                 st.rerun()
 
-    # EPSO benchmark info
-    if current_size == 20:
-        st.markdown('<div style="background:#e8f0fe;border-radius:8px;padding:10px 14px;font-size:12px;color:#004494;margin-bottom:14px"><strong>EPSO-Simulation:</strong> 20 Fragen = echte Testbedingungen. Bestehensgrenze: 10/20.</div>', unsafe_allow_html=True)
+    if st.session_state.session_size == 20:
+        st.info("EPSO-Simulation: 20 Fragen = echte Testbedingungen. Bestehensgrenze: 10/20.")
 
     # Start
     if st.button("Session starten", type="primary", use_container_width=True):
@@ -526,40 +326,19 @@ def show_home():
     if s["total"] > 0:
         pct = round((s["correct"] / s["total"]) * 100)
         level = pct // 10
-        level_names = {0:"Anfaenger",1:"Anfaenger",2:"Anfaenger",3:"Lernend",4:"Lernend",5:"Bestehend",6:"Gut",7:"Stark",8:"Exzellent",9:"Top",10:"Meister"}
-        st.markdown(f"""
-        <div class="g-card">
-            <div class="g-card-label">Dein Fortschritt</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <div style="font-size:14px;font-weight:700;color:#1f2937">Level {level} &middot; {level_names.get(level, "")}</div>
-                <div style="font-size:14px;font-weight:700;color:var(--eu-blue)">{pct}%</div>
-            </div>
-            <div class="g-xp-bar"><div class="g-xp-fill" style="width:{pct}%"></div></div>
-            <div class="g-metrics">
-                <div class="g-stat"><div class="num" style="color:#1f2937">{s['total']}</div><div class="label">Fragen</div></div>
-                <div class="g-stat"><div class="num g-green">{s['correct']}</div><div class="label">Richtig</div></div>
-                <div class="g-stat"><div class="num g-red">{s['wrong']}</div><div class="label">Falsch</div></div>
-                <div class="g-stat"><div class="num g-blue">{s['best_streak']}</div><div class="label">Streak</div></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        names = ["Anfänger","Anfänger","Anfänger","Lernend","Lernend","Bestehend","Gut","Stark","Exzellent","Top","Meister"]
+        st.markdown(f'<div class="g-card"><div class="g-card-label">Dein Fortschritt</div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:700">Level {level} — {names[min(level,10)]}</span><span style="font-weight:700;color:#004494">{pct}%</span></div><div class="xp-bar"><div class="xp-fill" style="width:{pct}%"></div></div><div class="g-metrics"><div class="g-stat"><div class="num" style="color:#1f2937">{s["total"]}</div><div class="label">Fragen</div></div><div class="g-stat"><div class="num" style="color:#0d7c3f">{s["correct"]}</div><div class="label">Richtig</div></div><div class="g-stat"><div class="num" style="color:#c0272d">{s["wrong"]}</div><div class="label">Falsch</div></div><div class="g-stat"><div class="num" style="color:#004494">{s["best_streak"]}</div><div class="label">Streak</div></div></div></div>', unsafe_allow_html=True)
 
         if s["traps"]:
-            sorted_traps = sorted(s["traps"].items(), key=lambda x: x[1], reverse=True)
-            html = '<div class="g-card"><div class="g-card-label">Schwachstellen</div>'
-            for trap, count in sorted_traps[:5]:
-                label = TRAP_LABELS.get(trap, trap)
-                total_wrong = s["wrong"]
-                pct_trap = round(count / total_wrong * 100) if total_wrong else 0
-                html += f'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:13px;color:#4b5563">{label}</span><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:4px;background:#fee2e2;border-radius:2px"><div style="width:{pct_trap}%;height:4px;background:var(--eu-red);border-radius:2px"></div></div><span style="font-size:13px;font-weight:700;color:var(--eu-red)">{count}</span></div></div>'
-            html += '</div>'
-            st.markdown(html, unsafe_allow_html=True)
+            sorted_traps = sorted(s["traps"].items(), key=lambda x: x[1], reverse=True)[:5]
+            rows = "".join([f'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:13px;color:#4b5563">{TRAP_LABELS.get(t,t)}</span><span style="font-size:13px;font-weight:700;color:#c0272d">{c}x</span></div>' for t,c in sorted_traps])
+            st.markdown(f'<div class="g-card"><div class="g-card-label" style="color:#c0272d">Schwachstellen</div>{rows}</div>', unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════
-# QUESTION SCREEN
+# QUESTION
 # ══════════════════════════════════════════════════
 def show_question():
-    if st.button("< Abbrechen", key="home_from_q"):
+    if st.button("< Abbrechen", key="home_q"):
         go_home()
 
     q = st.session_state.current_q
@@ -573,57 +352,41 @@ def show_question():
     remaining = max(0, TIME_LIMIT - elapsed)
     s = st.session_state.stats
 
+    # Timer using st.columns (native Streamlit — no broken HTML)
+    c1, c2, c3 = st.columns([2, 3, 2])
+    with c1:
+        st.markdown(f"**{len(session)+1}** / {size}")
+    with c2:
+        if not st.session_state.answered:
+            mins = remaining // 60
+            secs = remaining % 60
+            color = "#0d7c3f" if remaining > 60 else ("#d4620a" if remaining > 30 else "#c0272d")
+            st.markdown(f'<div style="text-align:center;font-size:32px;font-weight:800;color:{color};font-variant-numeric:tabular-nums">{mins}:{secs:02d}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="text-align:center;font-size:32px;font-weight:800;color:#d1d5db">&mdash;</div>', unsafe_allow_html=True)
+    with c3:
+        streak = f" | {st.session_state.streak}x" if st.session_state.streak >= 3 else ""
+        st.markdown(f'<div style="text-align:right;font-size:16px;padding-top:6px"><span style="color:#0d7c3f;font-weight:700">{s["correct"]}</span> : <span style="color:#c0272d;font-weight:700">{s["wrong"]+s["timeout"]}</span>{streak}</div>', unsafe_allow_html=True)
+
+    # Progress bar
     if not st.session_state.answered:
-        mins = remaining // 60
-        secs = remaining % 60
-        tc = "g-timer-ok" if remaining > 60 else ("g-timer-warn" if remaining > 30 else "g-timer-danger")
-    else:
-        mins = secs = 0
-        tc = ""
-
-    streak_html = f'<span class="g-streak">&#9889; {st.session_state.streak}</span>' if st.session_state.streak >= 3 else ""
-    pct_done = (len(session)) / size * 100
-
-    # Sticky timer bar
-    progress_color = "var(--eu-green)" if remaining > 60 else ("var(--eu-orange)" if remaining > 30 else "var(--eu-red)")
-    timer_pct = remaining / TIME_LIMIT * 100 if not st.session_state.answered else 0
-    st.markdown(f"""
-    <div class="g-timer-bar">
-        <div class="g-timer-row">
-            <div>
-                <span style="font-size:12px;color:#8993a4">Frage</span>
-                <span style="font-size:20px;font-weight:800;color:var(--eu-blue);margin-left:4px">{len(session)+1}</span>
-                <span style="font-size:12px;color:#8993a4">/ {size}</span>
-            </div>
-            <div class="g-timer-num {tc}">{f'{mins}:{secs:02d}' if not st.session_state.answered else '&mdash;'}</div>
-            <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:14px"><span class="g-green" style="font-weight:700">{s['correct']}</span><span style="color:#d1d5db;margin:0 3px">:</span><span class="g-red" style="font-weight:700">{s['wrong']+s['timeout']}</span></span>
-                {streak_html}
-            </div>
-        </div>
-        <div class="g-progress"><div class="g-progress-fill" style="width:{timer_pct}%;background:{progress_color}"></div></div>
-    </div>
-    """, unsafe_allow_html=True)
+        st.progress(remaining / TIME_LIMIT)
 
     # Source badge
-    if q.get("source") in ["EPSO Official", "Übungsfragen DE"]:
-        st.markdown(f'<span class="g-badge g-badge-verified">&#10022; {q["source"]}</span>', unsafe_allow_html=True)
+    src = q.get("source", "")
+    if src in ["EPSO Official", "Übungsfragen DE"]:
+        st.caption(f"✦ {src}")
     else:
-        st.markdown('<span class="g-badge g-badge-ai">&#9881; KI-generiert</span>', unsafe_allow_html=True)
+        st.caption("⚙ KI-generiert")
 
     # Text
-    st.markdown(f"""
-    <div style="background:var(--eu-grey-light);border-left:4px solid var(--eu-blue);
-        border-radius:0 var(--radius) var(--radius) 0;padding:20px 24px;margin:12px 0;
-        line-height:1.85;font-size:14.5px;color:#1f2937">{q['text']}</div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#f4f5f7;border-left:4px solid #004494;border-radius:0 12px 12px 0;padding:20px 24px;margin:8px 0 16px;line-height:1.85;font-size:14.5px;color:#1f2937">{q["text"]}</div>', unsafe_allow_html=True)
 
     # Question
-    is_incorrect = q.get("question_type") == "incorrect"
-    if is_incorrect:
-        st.markdown('<div style="background:#fef2f2;border-radius:8px;padding:10px 16px;font-weight:700;color:var(--eu-red);font-size:14px;margin-bottom:12px">&#9888; Welche Aussage ist NICHT zutreffend?</div>', unsafe_allow_html=True)
+    if q.get("question_type") == "incorrect":
+        st.warning("Welche Aussage ist **NICHT** zutreffend?")
     else:
-        st.markdown('<div style="background:var(--eu-blue-light);border-radius:8px;padding:10px 16px;font-weight:600;color:var(--eu-blue);font-size:14px;margin-bottom:12px">Welche Antwort kann am besten aus dem Text abgeleitet werden?</div>', unsafe_allow_html=True)
+        st.markdown("**Welche Antwort kann am besten aus dem Text abgeleitet werden?**")
 
     # Options
     for opt in q["options"]:
@@ -634,29 +397,28 @@ def show_question():
 
         if st.session_state.answered:
             if is_corr:
-                st.markdown(f'<div class="g-ans g-ans-correct"><strong>&#10003; {letter})</strong>&nbsp;&nbsp;{statement}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="g-ans g-ans-ok"><strong>&#10003; {letter})</strong>&nbsp;&nbsp;{statement}</div>', unsafe_allow_html=True)
             elif is_sel:
-                st.markdown(f'<div class="g-ans g-ans-wrong"><strong>&#10007; {letter})</strong>&nbsp;&nbsp;{statement}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="g-ans g-ans-bad"><strong>&#10007; {letter})</strong>&nbsp;&nbsp;{statement}</div>', unsafe_allow_html=True)
             else:
-                st.markdown(f'<div class="g-ans g-ans-neutral"><strong>{letter})</strong>&nbsp;&nbsp;{statement}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="g-ans g-ans-skip"><strong>{letter})</strong>&nbsp;&nbsp;{statement}</div>', unsafe_allow_html=True)
         else:
             if st.button(f"{letter})  {statement}", key=f"opt_{letter}"):
-                elapsed_f = int(time.time() - st.session_state.start_time)
+                el = int(time.time() - st.session_state.start_time)
                 st.session_state.selected = letter
                 st.session_state.answered = True
                 ok = letter == q["correct"]
-                stats = st.session_state.stats
-                stats["total"] += 1
+                st.session_state.stats["total"] += 1
                 if ok:
-                    stats["correct"] += 1
+                    st.session_state.stats["correct"] += 1
                     st.session_state.streak += 1
-                    stats["best_streak"] = max(stats["best_streak"], st.session_state.streak)
+                    st.session_state.stats["best_streak"] = max(st.session_state.stats["best_streak"], st.session_state.streak)
                 else:
-                    stats["wrong"] += 1
+                    st.session_state.stats["wrong"] += 1
                     st.session_state.streak = 0
                     trap = q.get("trap_type", "OTHER")
-                    stats["traps"][trap] = stats["traps"].get(trap, 0) + 1
-                st.session_state.session.append({**q, "user": letter, "ok": ok, "time": min(elapsed_f, TIME_LIMIT)})
+                    st.session_state.stats["traps"][trap] = st.session_state.stats["traps"].get(trap, 0) + 1
+                st.session_state.session.append({**q, "user": letter, "ok": ok, "time": min(el, TIME_LIMIT)})
                 st.rerun()
 
     # Timeout
@@ -672,7 +434,7 @@ def show_question():
     if not st.session_state.answered:
         try:
             from streamlit_autorefresh import st_autorefresh
-            st_autorefresh(interval=1000, limit=TIME_LIMIT, key="timer_refresh")
+            st_autorefresh(interval=1000, limit=TIME_LIMIT, key="timer")
         except ImportError:
             import streamlit.components.v1 as components
             components.html('<script>setTimeout(function(){window.parent.location.reload()},1100);</script>', height=0)
@@ -681,26 +443,24 @@ def show_question():
     if st.session_state.answered:
         sel = st.session_state.selected
         if sel == q["correct"]:
-            st.markdown('<div style="text-align:center;padding:16px;background:#ecfdf5;border-radius:var(--radius);margin:16px 0"><span style="font-size:24px">&#10003;</span><br><strong style="color:var(--eu-green);font-size:16px">Richtig!</strong></div>', unsafe_allow_html=True)
+            st.success("Richtig!")
         elif sel is None:
-            st.markdown('<div style="text-align:center;padding:16px;background:#fffbeb;border-radius:var(--radius);margin:16px 0"><span style="font-size:24px">&#9200;</span><br><strong style="color:var(--eu-orange);font-size:16px">Zeit abgelaufen</strong></div>', unsafe_allow_html=True)
+            st.warning("Zeit abgelaufen!")
         else:
-            st.markdown(f'<div style="text-align:center;padding:16px;background:#fef2f2;border-radius:var(--radius);margin:16px 0"><span style="font-size:24px">&#10007;</span><br><strong style="color:var(--eu-red);font-size:16px">Falsch</strong> &mdash; Richtig war <strong>{q["correct"]}</strong></div>', unsafe_allow_html=True)
+            st.error(f"Falsch — Richtig war {q['correct']}")
 
         trap = q.get("trap_type", "")
         label = TRAP_LABELS.get(trap, trap)
         tip = TRAP_TIPS.get(trap, "")
         show_tip = (not sel or sel != q["correct"]) and tip
 
-        st.markdown(f"""
-        <div class="g-explain">
-            <div class="g-explain-badge">{label}</div>
-            <div style="font-size:14px;line-height:1.7;color:#374151">{q.get("explanation", "")}</div>
-            {'<div class="g-explain-tip"><strong>Tipp:</strong> ' + tip + '</div>' if show_tip else ''}
-        </div>
-        """, unsafe_allow_html=True)
+        explain_html = f'<div class="g-explain"><div class="g-badge-y">{label}</div><div style="font-size:14px;line-height:1.7;color:#374151">{q.get("explanation","")}</div>'
+        if show_tip:
+            explain_html += f'<div class="g-tip"><strong>Tipp:</strong> {tip}</div>'
+        explain_html += '</div>'
+        st.markdown(explain_html, unsafe_allow_html=True)
 
-        if len(st.session_state.session) >= size:
+        if len(session) >= size:
             if st.button("Ergebnis anzeigen", type="primary", use_container_width=True):
                 st.session_state.screen = "results"
                 st.rerun()
@@ -715,7 +475,7 @@ def show_question():
                 st.rerun()
 
 # ══════════════════════════════════════════════════
-# RESULTS SCREEN
+# RESULTS
 # ══════════════════════════════════════════════════
 def show_results():
     session = st.session_state.session
@@ -724,64 +484,44 @@ def show_results():
     avg_time = round(sum(q.get("time", 0) for q in session) / len(session)) if session else 0
     verified = sum(1 for q in session if q.get("source") in ["EPSO Official", "Übungsfragen DE"])
 
-    grade = "&#127942;" if pct >= 90 else ("&#9733;" if pct >= 70 else ("&#9650;" if pct >= 50 else "&#8635;"))
-    grade_text = "Hervorragend!" if pct >= 90 else ("Stark!" if pct >= 70 else ("Bestanden" if pct >= 50 else "Weiter ueben"))
+    grade = "Hervorragend!" if pct >= 90 else ("Stark!" if pct >= 70 else ("Bestanden" if pct >= 50 else "Weiter üben"))
 
-    st.markdown(f"""
-    <div class="g-result-hero">
-        <div class="big">{grade}</div>
-        <div style="font-size:48px;font-weight:800;margin:4px 0">{pct}%</div>
-        <h2>{grade_text}</h2>
-        <div class="sub">{ok}/{len(session)} richtig &middot; &#216; {avg_time//60}:{avg_time%60:02d} pro Frage</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div class="result-hero"><div style="font-size:56px;font-weight:800">{pct}%</div><h2>{grade}</h2><div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px">{ok}/{len(session)} richtig &middot; Ø {avg_time//60}:{avg_time%60:02d} pro Frage</div></div>', unsafe_allow_html=True)
 
-    # Score cards
-    st.markdown(f"""
-    <div class="g-metrics">
-        <div class="g-stat"><div class="num g-green">{ok}</div><div class="label">Richtig</div></div>
-        <div class="g-stat"><div class="num g-red">{len(session)-ok}</div><div class="label">Falsch</div></div>
-        <div class="g-stat"><div class="num g-blue">{verified}</div><div class="label">Verifiziert</div></div>
-        <div class="g-stat"><div class="num" style="color:#7c3aed">{len(session)-verified}</div><div class="label">KI</div></div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div class="g-metrics"><div class="g-stat"><div class="num" style="color:#0d7c3f">{ok}</div><div class="label">Richtig</div></div><div class="g-stat"><div class="num" style="color:#c0272d">{len(session)-ok}</div><div class="label">Falsch</div></div><div class="g-stat"><div class="num" style="color:#004494">{verified}</div><div class="label">Verifiziert</div></div><div class="g-stat"><div class="num" style="color:#7c3aed">{len(session)-verified}</div><div class="label">KI</div></div></div>', unsafe_allow_html=True)
 
     if len(session) == 20:
         if ok >= 17: st.success("Exzellent!")
-        elif ok >= 14: st.success("Wettbewerbsfaehig")
+        elif ok >= 14: st.success("Wettbewerbsfähig")
         elif ok >= 10: st.warning("Bestanden (min. 10/20)")
         else: st.error(f"Nicht bestanden ({ok}/20)")
 
-    # Per-question results
-    items_html = '<div class="g-card"><div class="g-card-label">Alle Fragen</div>'
+    # Per question
     for i, q in enumerate(session):
-        dot = "g-dot-ok" if q.get("ok") else "g-dot-fail"
+        icon = "✅" if q.get("ok") else "❌"
         t = q.get("time", 0)
-        items_html += f'<div class="g-result-row"><div style="font-size:12px;color:#8993a4;width:20px">{i+1}</div><div class="g-result-dot {dot}"></div><div style="flex:1;color:#4b5563">{q.get("text","")[:45]}...</div><div style="color:#d1d5db;font-size:11px;font-variant-numeric:tabular-nums">{t//60}:{t%60:02d}</div></div>'
-    items_html += '</div>'
-    st.markdown(items_html, unsafe_allow_html=True)
+        st.caption(f"{icon} {i+1}. {q.get('text','')[:50]}... ({t//60}:{t%60:02d})")
 
-    # Error analysis
+    # Errors
     errors = [q for q in session if not q.get("ok")]
     if errors:
-        err_html = '<div class="g-card"><div class="g-card-label" style="color:var(--eu-red)">Fehleranalyse</div>'
+        st.markdown("---")
+        st.markdown("**Fehleranalyse**")
         for q in errors:
             trap = q.get("trap_type", "")
             label = TRAP_LABELS.get(trap, trap)
-            user_ans = q.get("user", "---")
+            user_ans = q.get("user", "—")
             correct = q.get("correct", "?")
-            user_stmt = next((o["statement"][:50] for o in q.get("options", []) if o["letter"] == user_ans), "---")
-            corr_stmt = next((o["statement"][:50] for o in q.get("options", []) if o["letter"] == correct), "?")
+            user_stmt = next((o["statement"][:55] for o in q.get("options", []) if o["letter"] == user_ans), "—")
+            corr_stmt = next((o["statement"][:55] for o in q.get("options", []) if o["letter"] == correct), "?")
             tip = TRAP_TIPS.get(trap, "")
-            err_html += f'<div style="padding:14px 0;border-bottom:1px solid #f3f4f6"><div class="g-explain-badge" style="margin-bottom:8px">{label}</div><div style="font-size:12px;color:var(--eu-red);margin-bottom:2px">&#10007; {user_ans}: {user_stmt}...</div><div style="font-size:12px;color:var(--eu-green);margin-bottom:4px">&#10003; {correct}: {corr_stmt}...</div><div style="font-size:11px;color:#8993a4">{tip}</div></div>'
-        err_html += '</div>'
-        st.markdown(err_html, unsafe_allow_html=True)
+            st.markdown(f'<div class="g-explain"><div class="g-badge-y">{label}</div><div style="font-size:12px;color:#c0272d">✗ {user_ans}: {user_stmt}...</div><div style="font-size:12px;color:#0d7c3f">✓ {correct}: {corr_stmt}...</div><div style="font-size:11px;color:#8993a4;margin-top:4px">{tip}</div></div>', unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
+    c1, c2 = st.columns(2)
+    with c1:
         if st.button("Neue Session", type="primary", use_container_width=True):
             start_session()
-    with col2:
+    with c2:
         if st.button("Startseite", use_container_width=True):
             go_home()
 
