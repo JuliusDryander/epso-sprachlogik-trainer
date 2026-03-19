@@ -131,77 +131,150 @@ if "screen" not in st.session_state:
 if "session_size" not in st.session_state:
     st.session_state.session_size = 10
 
-# ── Styling ──
+
+# ── EU Design System Styling ──
+# Official EU colors: Primary Blue #004494, Secondary Yellow #FFD617, Blue-75 #4073AF, Grey #404040
 st.markdown("""
 <style>
-    .stApp { max-width: 700px; margin: 0 auto; }
-    div[data-testid="stButton"] button {
-        width: 100%;
-        text-align: left;
-        padding: 12px 16px;
-        border-radius: 10px;
-        border: 2px solid #e0e0e0;
-        background: white;
-        font-size: 14px;
-    }
-    div[data-testid="stButton"] button:hover {
-        border-color: #2E75B6;
-        background: #f0f4f8;
-    }
-    .correct-answer { background-color: #d4edda !important; border-color: #2D8B4E !important; }
-    .wrong-answer { background-color: #f8d7da !important; border-color: #C0392B !important; }
+.stApp { max-width: 720px; margin: 0 auto; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; }
+[data-testid="stHeader"] { background: transparent; }
+footer, #MainMenu { display: none; }
+.block-container { padding-top: 1.5rem; padding-bottom: 2rem; }
+
+.eu-header {
+    background: #004494; color: white;
+    padding: 28px 28px 24px; margin-bottom: 20px;
+    border-bottom: 4px solid #FFD617;
+}
+.eu-header h2 { color: white; margin: 0 0 2px; font-size: 22px; font-weight: bold; }
+.eu-header p { color: rgba(255,255,255,0.75); margin: 0; font-size: 13px; }
+
+.eu-card {
+    background: white; border: 1px solid #e3e3e3;
+    padding: 20px 24px; margin-bottom: 16px;
+}
+.eu-card-label {
+    font-size: 11px; font-weight: bold; color: #004494;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 2px solid #FFD617; display: inline-block;
+}
+
+.eu-metrics { display: flex; gap: 1px; background: #e3e3e3; margin: 12px 0; }
+.eu-metric { flex: 1; text-align: center; background: white; padding: 16px 8px; }
+.eu-metric .num { font-size: 28px; font-weight: bold; line-height: 1; }
+.eu-metric .label { font-size: 10px; color: #6b6b6b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.eu-green { color: #008a00; }
+.eu-red { color: #da1e28; }
+.eu-orange { color: #e07000; }
+.eu-blue { color: #004494; }
+.eu-grey { color: #404040; }
+
+.eu-textbox {
+    background: #f5f7fa; border-left: 4px solid #004494;
+    padding: 20px 24px; margin: 16px 0;
+    line-height: 1.85; font-size: 14.5px; color: #2d2d2d;
+}
+
+div[data-testid="stButton"] > button {
+    width: 100%; text-align: left !important;
+    padding: 14px 18px !important; border-radius: 0 !important;
+    border: 1px solid #bfbfbf !important; border-left: 4px solid #bfbfbf !important;
+    background: white !important; font-size: 14px !important;
+    color: #2d2d2d !important; font-weight: normal !important;
+    transition: all 0.12s ease !important; line-height: 1.5 !important;
+    margin-bottom: 4px !important; font-family: Arial, sans-serif !important;
+}
+div[data-testid="stButton"] > button:hover {
+    border-left-color: #004494 !important; background: #f0f4fa !important;
+    color: #004494 !important; border-color: #004494 !important;
+}
+div[data-testid="stButton"] > button[kind="primary"] {
+    background: #004494 !important; color: white !important;
+    border: none !important; border-left: 4px solid #FFD617 !important;
+    font-weight: bold !important; padding: 16px 24px !important;
+    font-size: 15px !important;
+}
+div[data-testid="stButton"] > button[kind="primary"]:hover { background: #003776 !important; }
+
+.eu-timer { text-align: center; font-size: 34px; font-weight: bold; font-variant-numeric: tabular-nums; }
+.eu-timer-ok { color: #008a00; }
+.eu-timer-warn { color: #e07000; }
+.eu-timer-danger { color: #da1e28; animation: pulse 0.8s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+.eu-answer-correct { background:#defbe6; border:1px solid #008a00; border-left:4px solid #008a00; padding:14px 18px; margin:4px 0; font-size:14px; color:#044317; }
+.eu-answer-wrong { background:#fff1f1; border:1px solid #da1e28; border-left:4px solid #da1e28; padding:14px 18px; margin:4px 0; font-size:14px; color:#750e13; }
+.eu-answer-neutral { background:#f5f5f5; border:1px solid #e0e0e0; border-left:4px solid #e0e0e0; padding:14px 18px; margin:4px 0; font-size:14px; color:#8d8d8d; }
+
+.eu-explain { background:white; border:1px solid #e3e3e3; border-top:3px solid #004494; padding:20px 24px; margin:16px 0; }
+.eu-badge { display:inline-block; background:#FFD617; color:#2d2d2d; padding:4px 12px; font-size:12px; font-weight:bold; margin-bottom:10px; }
+.eu-tip { background:#f0f4fa; border-left:3px solid #004494; padding:10px 14px; font-size:13px; color:#004494; margin-top:12px; }
+
+.eu-src-badge { display:inline-block; padding:3px 10px; font-size:11px; font-weight:bold; letter-spacing:0.3px; }
+.eu-src-verified { background:#dce8f5; color:#004494; }
+.eu-src-ai { background:#f3e8ff; color:#6929c4; }
+
+div[data-testid="stProgress"] > div > div { height:6px !important; border-radius:0 !important; }
+
+.eu-result-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #e8e8e8; font-size:13px; }
+.eu-result-icon { width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; flex-shrink:0; }
+.eu-result-ok { background:#defbe6; color:#008a00; }
+.eu-result-fail { background:#fff1f1; color:#da1e28; }
+
+[data-testid="stMetric"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
 def get_next_question():
-    """Get next question (verified first, then AI)"""
     available = [q for q in VERIFIED if q["id"] not in st.session_state.used_ids]
-
     if available and random.random() < 0.65:
         q = random.choice(available)
         st.session_state.used_ids.append(q["id"])
         return q
-
-    # Try AI if API key is set
     api_key = st.session_state.get("api_key", "")
     if api_key:
         prev = ", ".join([q.get("text", "")[:25] for q in st.session_state.session[-3:]])
         return generate_ai_question(api_key, prev)
-
-    # Fallback to verified (even if used before)
     if VERIFIED:
-        q = random.choice(VERIFIED)
-        return q
+        return random.choice(VERIFIED)
     return None
 
 def show_home():
-    st.markdown("### 🧠 Sprachlogisches Denken")
-    st.caption("EPSO AD5 · Deutsch · 1:45/Frage · 30 verifizierte + KI-Fragen")
+    st.markdown("""
+    <div class="eu-header">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="font-size:28px">&#127466;&#127482;</div>
+            <div><h2>Sprachlogisches Denken</h2><p>EPSO AD5 Auswahlverfahren &middot; Deutsch &middot; 1:45 pro Frage</p></div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:12px;color:rgba(255,255,255,0.6)">
+            <span>&#10022; 30 verifizierte Fragen</span><span>&#129302; KI-generierte Fragen</span><span>&#128202; 6 Fehlertypen</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # API Key (optional)
-    with st.expander("⚙️ Anthropic API-Key (optional, für KI-generierte Fragen)"):
-        api_key = st.text_input("API Key", type="password", key="api_key_input")
+    with st.expander("API-Key eingeben (optional, fuer KI-Fragen)"):
+        api_key = st.text_input("Anthropic API Key", type="password", key="api_key_input", placeholder="sk-ant-...")
         if api_key:
             st.session_state.api_key = api_key
-            st.success("API-Key gesetzt. KI-Fragen aktiviert.")
+            st.success("KI-Fragen aktiviert")
         else:
-            st.info("Ohne API-Key nur die 30 verifizierten Fragen.")
+            st.caption("Ohne Key: 30 verifizierte Fragen im Rotationsverfahren.")
 
-    # Session size
-    st.markdown("**Session-Größe:**")
+    remaining = len([q for q in VERIFIED if q["id"] not in st.session_state.used_ids])
+    current = st.session_state.session_size
+
+    st.markdown("**Session konfigurieren**")
     cols = st.columns(4)
     for i, n in enumerate([5, 10, 15, 20]):
         with cols[i]:
-            if st.button(str(n), key=f"size_{n}",
-                        type="primary" if st.session_state.session_size == n else "secondary"):
+            if st.button(str(n), key=f"size_{n}", type="primary" if current == n else "secondary"):
                 st.session_state.session_size = n
                 st.rerun()
 
-    remaining = len([q for q in VERIFIED if q["id"] not in st.session_state.used_ids])
-    st.caption(f"{remaining} verifizierte Fragen übrig · {st.session_state.session_size} Fragen pro Session")
+    st.caption(f"{remaining}/{len(VERIFIED)} verifizierte Fragen verfuegbar")
 
-    # Start button
-    if st.button("▶️ Session starten", type="primary", use_container_width=True):
+    if st.button("Session starten", type="primary", use_container_width=True):
         st.session_state.session = []
         st.session_state.screen = "question"
         q = get_next_question()
@@ -212,28 +285,30 @@ def show_home():
             st.session_state.start_time = time.time()
         st.rerun()
 
-    # Stats
     s = st.session_state.stats
     if s["total"] > 0:
-        st.markdown("---")
-        st.markdown("**📊 Gesamtstatistik**")
-        c1, c2, c3, c4, c5 = st.columns(5)
-        c1.metric("Gesamt", s["total"])
-        c2.metric("✓", s["correct"])
-        c3.metric("✗", s["wrong"])
-        c4.metric("⏱", s["timeout"])
-        c5.metric("🔥 Beste", s["best_streak"])
-
         pct = round((s["correct"] / s["total"]) * 100)
+        st.markdown(f"""
+        <div class="eu-card">
+            <div class="eu-card-label">Gesamtstatistik</div>
+            <div class="eu-metrics">
+                <div class="eu-metric"><div class="num eu-grey">{s['total']}</div><div class="label">Gesamt</div></div>
+                <div class="eu-metric"><div class="num eu-green">{s['correct']}</div><div class="label">Richtig</div></div>
+                <div class="eu-metric"><div class="num eu-red">{s['wrong']}</div><div class="label">Falsch</div></div>
+                <div class="eu-metric"><div class="num eu-orange">{s['timeout']}</div><div class="label">Timeout</div></div>
+                <div class="eu-metric"><div class="num eu-blue">{s['best_streak']}</div><div class="label">Streak</div></div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         st.progress(pct / 100, text=f"{pct}% Trefferquote")
-
         if s["traps"]:
-            st.markdown("**Häufigste Fehlertypen:**")
             sorted_traps = sorted(s["traps"].items(), key=lambda x: x[1], reverse=True)
+            html = '<div class="eu-card"><div class="eu-card-label" style="border-bottom-color:#da1e28;color:#da1e28">Schwachstellen</div>'
             for trap, count in sorted_traps[:5]:
                 label = TRAP_LABELS.get(trap, trap)
-                tip = TRAP_TIPS.get(trap, "")
-                st.markdown(f"- {label}: **{count}×** — _{tip}_")
+                html += f'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8e8e8;font-size:13px"><span style="color:#404040">{label}</span><span style="color:#da1e28;font-weight:bold">{count}x</span></div>'
+            html += '</div>'
+            st.markdown(html, unsafe_allow_html=True)
 
 def show_question():
     q = st.session_state.current_q
@@ -241,65 +316,66 @@ def show_question():
         st.session_state.screen = "home"
         st.rerun()
         return
-
     session = st.session_state.session
     size = st.session_state.session_size
+    elapsed = int(time.time() - st.session_state.start_time) if st.session_state.start_time else 0
+    remaining = max(0, TIME_LIMIT - elapsed)
+    s = st.session_state.stats
 
-    # Header
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col1:
-        st.markdown(f"**{len(session) + 1}** / {size}")
-    with col2:
-        elapsed = int(time.time() - st.session_state.start_time) if st.session_state.start_time else 0
-        remaining = max(0, TIME_LIMIT - elapsed)
-        if not st.session_state.answered:
-            mins = remaining // 60
-            secs = remaining % 60
-            color = "green" if remaining > 60 else ("orange" if remaining > 30 else "red")
-            st.markdown(f"<h3 style='text-align:center;color:{color}'>{mins}:{secs:02d}</h3>", unsafe_allow_html=True)
-    with col3:
-        s = st.session_state.stats
-        st.markdown(f"✓ {s['correct']} · ✗ {s['wrong'] + s['timeout']}")
-
-    # Source badge
-    if q.get("source") == "EPSO Official" or q.get("source") == "Übungsfragen DE":
-        st.caption(f"✦ Verifizierte Frage · {q['source']}")
+    if not st.session_state.answered:
+        mins = remaining // 60
+        secs = remaining % 60
+        t_class = "eu-timer-ok" if remaining > 60 else ("eu-timer-warn" if remaining > 30 else "eu-timer-danger")
     else:
-        st.caption("🤖 KI-generierte Frage")
+        mins = secs = 0
+        t_class = ""
 
-    # Text
-    st.markdown(f"""<div style="background:#f8f9fb;border-left:4px solid #2E75B6;padding:16px;border-radius:8px;margin-bottom:16px;line-height:1.8">{q['text']}</div>""", unsafe_allow_html=True)
+    streak_html = f' <span style="font-size:11px;background:#FFD617;padding:2px 6px;font-weight:bold">&#128293; {st.session_state.streak}</span>' if st.session_state.streak >= 3 else ""
 
-    # Question
+    st.markdown(f"""
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:2px solid #004494;margin-bottom:12px">
+        <div style="font-size:14px;color:#6b6b6b">Frage <strong style="color:#004494;font-size:20px">{len(session)+1}</strong> / {size}</div>
+        <div class="eu-timer {t_class}">{f'{mins}:{secs:02d}' if not st.session_state.answered else '&mdash;'}</div>
+        <div style="font-size:14px"><span class="eu-green" style="font-weight:bold">{s['correct']}</span> <span style="color:#bfbfbf">|</span> <span class="eu-red" style="font-weight:bold">{s['wrong']+s['timeout']}</span>{streak_html}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if not st.session_state.answered:
+        pct = remaining / TIME_LIMIT
+        color = "#008a00" if remaining > 60 else ("#e07000" if remaining > 30 else "#da1e28")
+        st.markdown(f'<div style="height:3px;background:#e8e8e8;margin-bottom:16px"><div style="height:3px;width:{pct*100}%;background:{color};transition:width 1s linear"></div></div>', unsafe_allow_html=True)
+
+    if q.get("source") in ["EPSO Official", "Übungsfragen DE"]:
+        st.markdown(f'<span class="eu-src-badge eu-src-verified">&#10022; {q["source"]}</span>', unsafe_allow_html=True)
+    else:
+        st.markdown('<span class="eu-src-badge eu-src-ai">&#129302; KI-generiert</span>', unsafe_allow_html=True)
+
+    st.markdown(f'<div class="eu-textbox">{q["text"]}</div>', unsafe_allow_html=True)
+
     is_incorrect = q.get("question_type") == "incorrect"
     if is_incorrect:
-        st.markdown("⚠️ **Welche Aussage ist NICHT zutreffend?**")
+        st.markdown('<div style="background:#fff1f1;border-left:4px solid #da1e28;padding:10px 16px;font-weight:bold;color:#750e13;font-size:14px;margin-bottom:12px">Welche Aussage ist NICHT zutreffend?</div>', unsafe_allow_html=True)
     else:
-        st.markdown("**Welche Antwort kann am besten aus dem Text abgeleitet werden?**")
+        st.markdown('<div style="background:#f0f4fa;border-left:4px solid #004494;padding:10px 16px;font-weight:bold;color:#004494;font-size:14px;margin-bottom:12px">Welche Antwort kann am besten aus dem Text abgeleitet werden?</div>', unsafe_allow_html=True)
 
-    # Options
     for opt in q["options"]:
         letter = opt["letter"]
         statement = opt["statement"]
         is_selected = st.session_state.selected == letter
-        is_correct = letter == q["correct"]
-
+        is_correct_opt = letter == q["correct"]
         if st.session_state.answered:
-            if is_correct:
-                prefix = "✅"
+            if is_correct_opt:
+                st.markdown(f'<div class="eu-answer-correct"><strong>&#10003; {letter})</strong> {statement}</div>', unsafe_allow_html=True)
             elif is_selected:
-                prefix = "❌"
+                st.markdown(f'<div class="eu-answer-wrong"><strong>&#10007; {letter})</strong> {statement}</div>', unsafe_allow_html=True)
             else:
-                prefix = "⬜"
-            st.markdown(f"{prefix} **{letter})** {statement}")
+                st.markdown(f'<div class="eu-answer-neutral"><strong>{letter})</strong> {statement}</div>', unsafe_allow_html=True)
         else:
             if st.button(f"{letter})  {statement}", key=f"opt_{letter}"):
-                elapsed = int(time.time() - st.session_state.start_time)
+                elapsed_final = int(time.time() - st.session_state.start_time)
                 st.session_state.selected = letter
                 st.session_state.answered = True
                 ok = letter == q["correct"]
-
-                # Update stats
                 stats = st.session_state.stats
                 stats["total"] += 1
                 if ok:
@@ -311,50 +387,44 @@ def show_question():
                     st.session_state.streak = 0
                     trap = q.get("trap_type", "OTHER")
                     stats["traps"][trap] = stats["traps"].get(trap, 0) + 1
-
-                st.session_state.session.append({
-                    **q, "user": letter, "ok": ok, "time": min(elapsed, TIME_LIMIT)
-                })
+                st.session_state.session.append({**q, "user": letter, "ok": ok, "time": min(elapsed_final, TIME_LIMIT)})
                 st.rerun()
 
-    # Check timeout
-    if not st.session_state.answered:
-        elapsed = int(time.time() - st.session_state.start_time)
-        if elapsed >= TIME_LIMIT:
-            st.session_state.answered = True
-            st.session_state.stats["total"] += 1
-            st.session_state.stats["timeout"] += 1
-            st.session_state.streak = 0
-            st.session_state.session.append({
-                **q, "user": None, "ok": False, "time": TIME_LIMIT
-            })
-            st.rerun()
+    if not st.session_state.answered and elapsed >= TIME_LIMIT:
+        st.session_state.answered = True
+        st.session_state.stats["total"] += 1
+        st.session_state.stats["timeout"] += 1
+        st.session_state.streak = 0
+        st.session_state.session.append({**q, "user": None, "ok": False, "time": TIME_LIMIT})
+        st.rerun()
 
-    # Show explanation
     if st.session_state.answered:
-        st.markdown("---")
         sel = st.session_state.selected
         if sel == q["correct"]:
-            st.success(f"✓ Richtig! Antwort: {q['correct']}")
+            st.markdown('<div style="text-align:center;padding:14px;background:#defbe6;border-left:4px solid #008a00;margin:16px 0"><strong style="color:#008a00;font-size:16px">&#10003; Richtig!</strong></div>', unsafe_allow_html=True)
         elif sel is None:
-            st.warning(f"⏱ Zeit abgelaufen! Antwort: {q['correct']}")
+            st.markdown('<div style="text-align:center;padding:14px;background:#fff8e1;border-left:4px solid #e07000;margin:16px 0"><strong style="color:#e07000;font-size:16px">&#9200; Zeit abgelaufen</strong></div>', unsafe_allow_html=True)
         else:
-            st.error(f"✗ Falsch. Richtige Antwort: {q['correct']}")
-
-        st.markdown(q.get("explanation", ""))
+            st.markdown(f'<div style="text-align:center;padding:14px;background:#fff1f1;border-left:4px solid #da1e28;margin:16px 0"><strong style="color:#da1e28;font-size:16px">&#10007; Falsch</strong> &mdash; Richtig: <strong>{q["correct"]}</strong></div>', unsafe_allow_html=True)
 
         trap = q.get("trap_type", "")
         label = TRAP_LABELS.get(trap, trap)
         tip = TRAP_TIPS.get(trap, "")
-        st.info(f"**Fehlertyp:** {label}\n\n**Tipp:** {tip}")
+        show_tip = (not sel or sel != q["correct"]) and tip
+        st.markdown(f"""
+        <div class="eu-explain">
+            <div class="eu-badge">{label}</div>
+            <div style="font-size:14px;line-height:1.7;color:#2d2d2d">{q.get("explanation", "")}</div>
+            {'<div class="eu-tip"><strong>Tipp:</strong> ' + tip + '</div>' if show_tip else ""}
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Next or finish
         if len(st.session_state.session) >= size:
-            if st.button("📊 Ergebnis anzeigen", type="primary", use_container_width=True):
+            if st.button("Ergebnis anzeigen", type="primary", use_container_width=True):
                 st.session_state.screen = "results"
                 st.rerun()
         else:
-            if st.button("Nächste Frage →", type="primary", use_container_width=True):
+            if st.button("Naechste Frage", type="primary", use_container_width=True):
                 nq = get_next_question()
                 if nq:
                     st.session_state.current_q = nq
@@ -368,57 +438,60 @@ def show_results():
     ok = sum(1 for q in session if q.get("ok"))
     pct = round((ok / len(session)) * 100) if session else 0
     avg_time = round(sum(q.get("time", 0) for q in session) / len(session)) if session else 0
+    verified = sum(1 for q in session if q.get("source") in ["EPSO Official", "Übungsfragen DE"])
+    emoji = "&#127919;" if pct >= 80 else ("&#128200;" if pct >= 60 else ("&#128170;" if pct >= 50 else "&#128260;"))
 
-    st.markdown("### 📊 Session beendet")
+    st.markdown(f"""
+    <div class="eu-header" style="text-align:center">
+        <div style="font-size:48px;margin-bottom:8px">{emoji}</div>
+        <h2>Session abgeschlossen</h2>
+        <p>{verified} verifizierte + {len(session)-verified} KI-generierte Fragen</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Score
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Richtig", f"{pct}%")
-    col2.metric("Score", f"{ok}/{len(session)}")
-    col3.metric("Ø Zeit", f"{avg_time // 60}:{avg_time % 60:02d}")
+    pct_color = "eu-green" if pct >= 70 else ("eu-orange" if pct >= 50 else "eu-red")
+    time_color = "eu-green" if avg_time <= 90 else "eu-orange"
+    st.markdown(f"""
+    <div class="eu-metrics">
+        <div class="eu-metric"><div class="num {pct_color}">{pct}%</div><div class="label">Richtig</div></div>
+        <div class="eu-metric"><div class="num eu-grey">{ok}/{len(session)}</div><div class="label">Score</div></div>
+        <div class="eu-metric"><div class="num {time_color}">{avg_time//60}:{avg_time%60:02d}</div><div class="label">Zeit</div></div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if len(session) == 20:
-        if ok >= 17:
-            st.success("🎯 Exzellent – Top-Percentile!")
-        elif ok >= 14:
-            st.success("📈 Stark – wettbewerbsfähig")
-        elif ok >= 10:
-            st.warning("✅ Bestanden – Luft nach oben")
-        else:
-            st.error(f"❌ Nicht bestanden ({ok}/20, min. 10)")
+        if ok >= 17: st.success("Exzellent!")
+        elif ok >= 14: st.success("Wettbewerbsfaehig")
+        elif ok >= 10: st.warning("Bestanden (min. 10/20)")
+        else: st.error(f"Nicht bestanden ({ok}/20)")
 
-    # Question overview
-    st.markdown("**Übersicht:**")
-    for i, q in enumerate(session):
-        icon = "✅" if q.get("ok") else "❌"
-        src = "✦" if q.get("source") in ["EPSO Official", "Übungsfragen DE"] else "🤖"
+    items_html = '<div class="eu-card"><div class="eu-card-label">Uebersicht</div>'
+    for q in session:
+        ic = "eu-result-ok" if q.get("ok") else "eu-result-fail"
+        sym = "&#10003;" if q.get("ok") else "&#10007;"
         t = q.get("time", 0)
-        st.caption(f"{icon} {src} {q.get('text', '')[:50]}... ({t // 60}:{t % 60:02d})")
+        items_html += f'<div class="eu-result-row"><div class="eu-result-icon {ic}">{sym}</div><div style="flex:1;color:#404040">{q.get("text","")[:42]}...</div><div style="color:#bfbfbf;font-size:11px">{t//60}:{t%60:02d}</div></div>'
+    items_html += '</div>'
+    st.markdown(items_html, unsafe_allow_html=True)
 
-    # Error analysis
     errors = [q for q in session if not q.get("ok")]
     if errors:
-        st.markdown("---")
-        st.markdown("**❌ Fehleranalyse:**")
+        err_html = '<div class="eu-card"><div class="eu-card-label" style="border-bottom-color:#da1e28;color:#da1e28">Fehleranalyse</div>'
         for q in errors:
             trap = q.get("trap_type", "")
             label = TRAP_LABELS.get(trap, trap)
-            user_ans = q.get("user", "—")
+            user_ans = q.get("user", "---")
             correct = q.get("correct", "?")
-            user_stmt = next((o["statement"][:60] for o in q.get("options", []) if o["letter"] == user_ans), "—")
-            corr_stmt = next((o["statement"][:60] for o in q.get("options", []) if o["letter"] == correct), "?")
+            user_stmt = next((o["statement"][:50] for o in q.get("options", []) if o["letter"] == user_ans), "---")
+            corr_stmt = next((o["statement"][:50] for o in q.get("options", []) if o["letter"] == correct), "?")
+            tip = TRAP_TIPS.get(trap, "")
+            err_html += f'<div style="padding:12px 0;border-bottom:1px solid #e8e8e8"><div class="eu-badge" style="margin-bottom:6px">{label}</div><div style="font-size:12px;color:#da1e28">&#10007; {user_ans}: {user_stmt}...</div><div style="font-size:12px;color:#008a00">&#10003; {correct}: {corr_stmt}...</div><div style="font-size:11px;color:#6b6b6b;margin-top:4px">{tip}</div></div>'
+        err_html += '</div>'
+        st.markdown(err_html, unsafe_allow_html=True)
 
-            st.markdown(f"""
-**{label}**
-- ❌ Ihre Antwort ({user_ans}): _{user_stmt}..._
-- ✅ Richtig ({correct}): _{corr_stmt}..._
-- 💡 _{TRAP_TIPS.get(trap, '')}_
-""")
-
-    # Buttons
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔄 Neue Session", use_container_width=True):
+        if st.button("Neue Session", type="primary", use_container_width=True):
             st.session_state.session = []
             st.session_state.screen = "question"
             nq = get_next_question()
@@ -429,7 +502,7 @@ def show_results():
                 st.session_state.start_time = time.time()
             st.rerun()
     with col2:
-        if st.button("🏠 Startseite", use_container_width=True):
+        if st.button("Startseite", use_container_width=True):
             st.session_state.session = []
             st.session_state.screen = "home"
             st.rerun()
