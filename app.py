@@ -398,6 +398,19 @@ def show_question():
         st.session_state.session.append({**q, "user": None, "ok": False, "time": TIME_LIMIT})
         st.rerun()
 
+    # Auto-refresh timer: rerun every 1 second while unanswered
+    if not st.session_state.answered:
+        try:
+            from streamlit_autorefresh import st_autorefresh
+            st_autorefresh(interval=1000, limit=TIME_LIMIT, key="timer_refresh")
+        except ImportError:
+            # Fallback: JS-based reload
+            import streamlit.components.v1 as components
+            components.html(
+                '<script>setTimeout(function(){window.parent.location.reload()},1100);</script>',
+                height=0,
+            )
+
     if st.session_state.answered:
         sel = st.session_state.selected
         if sel == q["correct"]:
