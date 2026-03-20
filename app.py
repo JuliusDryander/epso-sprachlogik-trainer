@@ -44,6 +44,10 @@ VERIFIED = [
 {"id":"de-17","source":"Übungsfragen DE","text":"Genauso wie ein Wolf nicht ohne sein Rudel überleben kann, so braucht auch der Hund einen Herrn. Anhänglichkeit ist ein strategisches Verhalten, das die Überlebenschancen vergrößern soll. Manchmal ist diese Anhänglichkeit mit etwas gekoppelt, was wir für Treue halten. Manchmal auch mit Tricks und Schläue. Ein kluger Hund wird seine Zuneigungsbekundungen einsetzen, um Nahrung zu ergattern!","question_type":"correct","options":[{"letter":"A","statement":"Da ein Hund ein Rudel braucht, kann er ohne einen Herrn nicht überleben."},{"letter":"B","statement":"Wenn ein Hund Zuneigung zeigt, ist dies Teil einer Überlebensstrategie."},{"letter":"C","statement":"Haustiere benutzen Tricks, um Nahrung zu ergattern."},{"letter":"D","statement":"Da Hunde ähnlich aussehen wie Wölfe, ist auch ihr Verhalten ähnlich."}],"correct":"B","explanation":"B korrekt: 'Anhänglichkeit ist ein strategisches Verhalten, das die Überlebenschancen vergrößern soll.' A: 'Braucht' ≠ 'kann nicht überleben' (GENERALISIERUNG). C: Text spricht nur von Hunden, nicht Haustieren allgemein (GENERALISIERUNG). D: Über äußere Ähnlichkeit nichts im Text (NICHT_IM_TEXT).","trap_type":"GENERALISIERUNG"},
 {"id":"de-18","source":"Übungsfragen DE","text":"Hinweise auf Erasmus sind in Rotterdam überall zu finden. Da ist die Erasmusbrücke über die Maas, ein elegantes Wunder der Architektur, das bei starkem Wind ins Wanken gerät. Und die Erasmus-Universität, die heutzutage weniger philosophisch gesinnte Wirtschaftswissenschaftler und Juristen hervorbringt, aber eine Stätte der Gelehrsamkeit ist. Außerdem gibt es ein Erasmus-Umzugsunternehmen, eine Erasmus-Keksfabrik, einen Erasmus-Kindergarten und vieles mehr.","question_type":"correct","options":[{"letter":"A","statement":"Nach Erasmus sind u.a. eine Keksfabrik und eine Grundschule benannt."},{"letter":"B","statement":"Die Erasmusbrücke ist infolge starken Windes ins Wanken geraten und eingestürzt."},{"letter":"C","statement":"Philosophie ist nicht Teil des Lehrplans für Wirtschaftswissenschaftler."},{"letter":"D","statement":"Die nach Erasmus benannte Brücke ist von großer architektonischer Eleganz."}],"correct":"D","explanation":"D korrekt: 'Elegantes Wunder der Architektur'. A: Kindergarten, nicht Grundschule (NICHT_IM_TEXT). B: 'Gerät ins Wanken' ≠ 'eingestürzt' (GENERALISIERUNG). C: 'Philosophisch gesinnt' bezieht sich auf Gesinnung, nicht Lehrplan (KAUSALITAET).","trap_type":"NICHT_IM_TEXT"},
 {"id":"de-19","source":"Übungsfragen DE","text":"Daten über gefährdete Vogelarten bilden die Grundlage für Schutzbemühungen, so Joke Winkelman. 'Der Rückgang ist bei 99 Prozent der Arten auf menschliches Handeln zurückzuführen. Natürlich haben auch Naturereignisse zu Artensterben geführt, wie der Ausbruch des Krakatoa 1883. Auch durch El Nino gab es für einige Arten auf den Galapagosinseln Probleme.'","question_type":"correct","options":[{"letter":"A","statement":"Wir können gefährdete Vogelarten schützen, indem wir viel über sie herausfinden."},{"letter":"B","statement":"Viele Vogelarten sterben infolge von Naturkatastrophen aus."},{"letter":"C","statement":"Vogelarten sterben sowohl infolge menschlichen Verhaltens als auch infolge von Naturkatastrophen aus."},{"letter":"D","statement":"Wegen El Nino sind mehrere Vogelarten ausgestorben."}],"correct":"C","explanation":"C korrekt: Beide Ursachen werden genannt (99% menschlich + Naturereignisse). A: Datensammlung ist Grundlage, nicht direkt Schutz (KAUSALITAET). B: 'Viele' ≠ 1% der Fälle (QUANTITAET). D: El Nino verursachte 'Probleme', nicht Aussterben (GENERALISIERUNG).","trap_type":"QUANTITAET"},
+# EU Training Fragen (3)
+{"id":"eut-1","source":"EU Training","text":"Die Europäische Kommission hat heute das zweite Legislativpaket für einen einheitlichen europäischen Luftraum (SES II) verabschiedet. Die Vorschläge zielen darauf ab, die Sicherheit weiter zu verbessern, Kosten zu senken und Verspätungen zu reduzieren. Dies wiederum wird einen geringeren Treibstoffverbrauch bedeuten, sodass Fluggesellschaften bis zu 16 Millionen Tonnen CO2-Emissionen einsparen und ihre jährlichen Kosten um zwei bis drei Milliarden Euro senken könnten. Diese umfassende Reform des europäischen Flugverkehrsmanagements wird entscheidend sein, um die bis 2020 erwartete Verdoppelung des Flugverkehrs zu bewältigen. Gleichzeitig wird die europäische Fertigungsindustrie davon profitieren, an der Spitze der Innovation im Flugverkehrsmanagement zu stehen (d.h. satellitengestützte Systeme), was ihr einen Wettbewerbsvorteil auf den globalen Märkten verschafft. (Quelle: Europa-Pressemitteilungen)","question_type":"correct","options":[{"letter":"A","statement":"Die Reformvorschläge von SES II werden bis 2020 nicht vollständig im europäischen Flugverkehrsmanagement umgesetzt sein."},{"letter":"B","statement":"Verbesserte Sicherheit und weniger Verspätungen haben das Potenzial, der Luftfahrtindustrie erhebliche Geldbeträge zu sparen."},{"letter":"C","statement":"Die Umsetzung der SES-II-Vorschläge wird die Flugverkehrsmanagement-Technologie zu einer der führenden Industrien Europas machen."},{"letter":"D","statement":"Eine Reduktion von 16 Millionen Tonnen CO2-Emissionen wird direkt zu Einsparungen von mehreren Milliarden Dollar für Fluggesellschaften führen."}],"correct":"B","explanation":"B korrekt: Der Text nennt klar, dass die Vorschläge Sicherheit verbessern und Verspätungen reduzieren sollen, was zu geringerem Treibstoffverbrauch und damit zu Kostensenkungen führt. A: Der Text sagt nicht, ob die Reform bis 2020 vollständig umgesetzt sein wird oder nicht (NICHT_IM_TEXT). C: Der Text sagt, die Industrie wird von Innovation profitieren und Wettbewerbsvorteile haben, nicht dass sie eine 'führende Industrie' wird (GEWICHTUNG). D: Die CO2-Reduktion und die Kostensenkung werden separat genannt; der Text stellt keine direkte Kausalität zwischen CO2-Reduktion und Geldeinsparungen her (KAUSALITAET).","trap_type":"NICHT_IM_TEXT"},
+{"id":"eut-2","source":"EU Training","text":"Machen Promi-Werbung einen Unterschied für Marken? Eine Studie von 2012 im Journal of Advertising Research ergab, dass etwa 14-19% der amerikanischen Werbeanzeigen solche Empfehlungen enthielten. Die Unterstützung durch Sportstars schien den Absatz von Produkten zu steigern, sowohl absolut als auch im Vergleich zur Konkurrenz. Es gab einen kleinen, aber statistisch signifikanten Anstieg des Aktienkurses am Tag der Bekanntgabe (0,23%) und weitere Steigerungen, wenn der Sportler Erfolge erzielte (Meisterschaft oder Medaille). Eine Nielsen-Studie von 2015 ergab, dass Promi-Werbung den größten Einfluss auf die Generation Z (15-20 Jahre) hat, wobei 16% davon angezogen werden, gefolgt von 14% der Millennials. Im Gegensatz dazu interessierten sich nur 7% der Babyboomer (50-64) und 2% der über 65-Jährigen für solches Marketing. (Quelle: economist.com)","question_type":"correct","options":[{"letter":"A","statement":"Die Wirkung von Promi-Werbung ist direkt proportional zum steigenden Alter."},{"letter":"B","statement":"Die Wirkung einer Promi-Empfehlung hängt davon ab, wie sehr sich die Menschen mit der Person identifizieren können."},{"letter":"C","statement":"Der Einfluss von Promi-Werbung ist umgekehrt proportional zum steigenden Alter."},{"letter":"D","statement":"Empfehlungen durch Sportstars machen nur dann einen Unterschied, wenn der Sportler erfolgreich ist."}],"correct":"C","explanation":"C korrekt: Die Zahlen zeigen klar: Generation Z 16%, Millennials 14%, Babyboomer 7%, über 65 nur 2% – je älter, desto weniger Wirkung = umgekehrt proportional. A: Das Gegenteil ist der Fall – die Wirkung sinkt mit dem Alter. B: Über Identifikation sagt der Text nichts, nur über Alter (NICHT_IM_TEXT). D: 'Nur' ist falsch – alle Empfehlungen steigern den Absatz, der Effekt ist lediglich größer bei Erfolg (GENERALISIERUNG).","trap_type":"GENERALISIERUNG"},
+{"id":"eut-3","source":"EU Training","text":"Jeden Tag machen Menschen Milliarden von Selfies, ohne sich der verzerrenden Wirkung der Kameranähe bewusst zu sein, was bei vielen zu einem möglicherweise verzerrten Selbstbild führt. Boris Paskhover, Assistenzprofessor an der Rutgers New Jersey Medical School, spezialisiert auf plastische Gesichtschirurgie, wurden häufig Selfies als Beispiele gezeigt, warum Patienten ihre Nase verkleinern lassen wollten. Paskhover suchte nach einer besseren Methode, um Patienten zu erklären, warum sie Selfies nicht zur Beurteilung ihrer Nasengröße verwenden können, damit sie ihre Selbstwahrnehmung verbessern können. Das Rutgers-Stanford-Modell zeigt, dass ein durchschnittliches Selfie, aufgenommen aus etwa 30 cm Entfernung, die Nasenbasis etwa 30 Prozent breiter und die Nasenspitze 7 Prozent breiter erscheinen lässt, als wenn das Foto aus 1,50 m Entfernung aufgenommen worden wäre. (Quelle: rutgers.edu)","question_type":"correct","options":[{"letter":"A","statement":"Menschen schaden möglicherweise ihrem Selbstbild, weil sie die Grundlagen der Kameratechnik nicht verstehen."},{"letter":"B","statement":"Kameras mit Anti-Verzerrungssoftware würden das Aussehen von Selfies verbessern."},{"letter":"C","statement":"Während die Nase betroffen ist, werden andere Gesichtszüge weiter von der Kamera nicht verzerrt."},{"letter":"D","statement":"Durch das Aufnehmen von Selfies entwickeln Menschen ein falsches und verzerrtes Selbstbild."}],"correct":"A","explanation":"A korrekt: Der Text sagt, dass Menschen Selfies machen 'ohne sich der verzerrenden Wirkung bewusst zu sein', was zu einem 'verzerrten Selbstbild' führen kann. Mangelndes Verständnis der Kameranähe = mangelndes Verständnis der Kameratechnik. B: Über Anti-Verzerrungssoftware sagt der Text nichts – die Aussage erfordert die Annahme, dass solche Software funktioniert (NICHT_IM_TEXT). C: Der Text spricht nur von der Nase; über andere Gesichtszüge wird keine Aussage getroffen (NICHT_IM_TEXT). D: 'Möglicherweise verzerrtes Selbstbild' ≠ 'ein falsches und verzerrtes Selbstbild' mit Sicherheit – der Text sagt 'möglicherweise' (GEWICHTUNG).","trap_type":"GEWICHTUNG"},
 ]
 
 # ── Trap Labels & Tips ──
@@ -67,19 +71,15 @@ TRAP_TIPS = {
 
 # ── AI Question Generation ──
 def generate_ai_question(api_key, previous_topics=""):
-    """Generate a question using Claude API"""
+    """Generate a question using Claude API with difficulty scaling"""
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=api_key)
 
+        difficulty = st.session_state.get("difficulty", "mittel")
+
         # Randomize parameters for variety
         text_length = random.choice(["kurz (80-100 Wörter)", "mittel (120-150 Wörter)", "lang (160-200 Wörter)"])
-        opt_style = random.choice([
-            "Manche Optionen kurz (1 Satz), manche lang (2 Sätze).",
-            "Alle Optionen ca. gleich lang (1-2 Sätze).",
-            "Die richtige Antwort ist die längste Option.",
-            "Die richtige Antwort ist die kürzeste Option."
-        ])
         trap = random.choice(["CHRONOLOGIE", "KAUSALITAET", "QUANTITAET", "NICHT_IM_TEXT", "GEWICHTUNG", "GENERALISIERUNG"])
         topic_pool = random.choice([
             "EU-Politik, Umweltregulierung oder Klimaschutz",
@@ -94,22 +94,49 @@ def generate_ai_question(api_key, previous_topics=""):
             "Astronomie, Physik oder Chemie"
         ])
 
+        # Difficulty-specific instructions
+        if difficulty == "leicht":
+            diff_prompt = """SCHWIERIGKEIT: LEICHT (Übungsniveau)
+- Die richtige Antwort ist fast wörtlich im Text zu finden.
+- Falsche Optionen sind klar erkennbar falsch (widersprechen dem Text offensichtlich).
+- Der Text hat einen klaren, linearen Aufbau ohne verschachtelte Argumente.
+- Optionenlänge: gleichmäßig, 1 Satz pro Option."""
+
+        elif difficulty == "schwer":
+            diff_prompt = f"""SCHWIERIGKEIT: SCHWER (Echtes EPSO-Prüfungsniveau)
+- Die richtige Antwort erfordert eine LOGISCHE ABLEITUNG über 2-3 Sätze, nicht bloßes Wiedererkennen.
+- MINDESTENS 2 der 4 Optionen müssen auf den ersten Blick plausibel klingen.
+- Der Unterschied zwischen der richtigen und einer falschen Option hängt an EINEM EINZIGEN WORT
+  (z.B. "einige" vs "die meisten", "kann" vs "wird", "beitragen" vs "gewährleisten").
+- Der Text enthält Einschränkungen, Ausnahmen und Relativierungen die man leicht überliest
+  (z.B. "in der Regel", "mit Ausnahme von", "sofern", "zwar...aber").
+- Eine Option ist eine TEILWAHRHEIT: der erste Teil stimmt, aber ein Detail am Ende ist falsch.
+- Eine Option klingt wie eine logische Schlussfolgerung, aber die Kausalitätskette fehlt im Text.
+- Variiere die Länge der Optionen: die richtige Antwort ist NICHT immer die längste oder kürzeste.
+- Verwende komplexere Satzstrukturen mit Nebensätzen und Einschüben im Text."""
+
+        else:  # mittel
+            diff_prompt = f"""SCHWIERIGKEIT: MITTEL
+- Die richtige Antwort erfordert aufmerksames Lesen, ist aber ableitbar.
+- 1-2 Optionen sind klar falsch, 1 Option ist ein guter Distraktor.
+- Der Text hat moderate Komplexität mit einigen Einschränkungen.
+- Manche Optionen kurz (1 Satz), manche lang (2 Sätze)."""
+
         system = f"""Du bist EPSO-Testentwickler für AD5-Sprachlogik (Deutsch). Erstelle EINE Aufgabe.
+
+{diff_prompt}
 
 REGELN:
 - Textlänge: {text_length}
 - Thema: {topic_pool}
-- {opt_style}
 - Hauptfalle: {trap}
 - Frage: "Welche Antwort kann am besten aus dem Text abgeleitet werden?"
-- 4 Optionen (A/B/C/D), genau EINE richtig, Position der richtigen Antwort variieren
+- 4 Optionen (A/B/C/D), genau EINE richtig, Position variieren
 - Allgemeinwissen spielt KEINE Rolle — nur der Text zählt
-- Jede falsche Option nutzt einen der 6 Nicht-Übereinstimmungstypen:
-  CHRONOLOGIE (falscher Zeitablauf), KAUSALITAET (falsche Ursache-Wirkung),
-  QUANTITAET (falsche Mengen), NICHT_IM_TEXT (plausibel aber nicht erwähnt),
-  GEWICHTUNG ("hauptsächlich/nur/vor allem"), GENERALISIERUNG ("Viele"->"Alle")
+- Die 6 Nicht-Übereinstimmungstypen für falsche Optionen:
+  CHRONOLOGIE, KAUSALITAET, QUANTITAET, NICHT_IM_TEXT, GEWICHTUNG, GENERALISIERUNG
 
-WICHTIG: Erstelle einen EINZIGARTIGEN Text. Vermeide folgende bereits verwendete Themen: {previous_topics}
+Vermeide diese Themen: {previous_topics}
 
 FORMAT (NUR JSON, kein anderer Text):
 {{"text":"...","question_type":"correct","options":[{{"letter":"A","statement":"..."}},{{"letter":"B","statement":"..."}},{{"letter":"C","statement":"..."}},{{"letter":"D","statement":"..."}}],"correct":"B","explanation":"...","trap_type":"{trap}"}}"""
@@ -125,6 +152,7 @@ FORMAT (NUR JSON, kein anderer Text):
         q = json.loads(text)
         q["source"] = "KI-generiert"
         q["id"] = f"ai-{int(time.time())}-{random.randint(1000,9999)}"
+        q["difficulty"] = difficulty
         if "question_type" not in q:
             q["question_type"] = "correct"
         return q
@@ -156,7 +184,9 @@ if "session_size" not in st.session_state:
 if "mode" not in st.session_state:
     st.session_state.mode = "mixed"  # "verified", "ai", "mixed"
 if "session_used_ids" not in st.session_state:
-    st.session_state.session_used_ids = []  # tracks IDs used in CURRENT session
+    st.session_state.session_used_ids = []
+if "difficulty" not in st.session_state:
+    st.session_state.difficulty = "mittel"  # "leicht", "mittel", "schwer"  # tracks IDs used in CURRENT session
 
 
 
@@ -273,7 +303,7 @@ def go_home():
 # HOME
 # ══════════════════════════════════════════════════
 def show_home():
-    st.markdown("""<div class="hero"><h1>Sprachlogisches Denken</h1><p class="sub">EPSO AD5 Auswahlverfahren &middot; Verbal Reasoning &middot; Deutsch</p><div class="chips"><span class="chip">30 verifizierte Fragen</span><span class="chip">KI-generierte Fragen</span><span class="chip">1:45 pro Frage</span><span class="chip">6 Fehlertypen</span></div></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="hero"><h1>Sprachlogisches Denken</h1><p class="sub">EPSO AD5 Auswahlverfahren &middot; Verbal Reasoning &middot; Deutsch</p><div class="chips"><span class="chip">33 verifizierte Fragen</span><span class="chip">KI-generierte Fragen</span><span class="chip">1:45 pro Frage</span><span class="chip">6 Fehlertypen</span></div></div>""", unsafe_allow_html=True)
 
     # API Key
     secret_key = None
@@ -316,6 +346,24 @@ def show_home():
 
     if st.session_state.session_size == 20:
         st.info("EPSO-Simulation: 20 Fragen = echte Testbedingungen. Bestehensgrenze: 10/20.")
+
+    # Difficulty (only relevant for KI mode)
+    if st.session_state.mode in ["ai", "mixed"] and has_api:
+        st.markdown("**Schwierigkeit** (KI-Fragen)")
+        diff_cols = st.columns(3)
+        diffs = [("leicht", "Übung"), ("mittel", "Mittel"), ("schwer", "Prüfung")]
+        for i, (dk, dl) in enumerate(diffs):
+            with diff_cols[i]:
+                tp = "primary" if st.session_state.difficulty == dk else "secondary"
+                if st.button(dl, key=f"d_{dk}", type=tp, use_container_width=True):
+                    st.session_state.difficulty = dk
+                    st.rerun()
+        diff_desc = {
+            "leicht": "Antwort fast wörtlich im Text. Zum Aufwärmen.",
+            "mittel": "Aufmerksames Lesen nötig. 1-2 gute Distraktoren.",
+            "schwer": "Echtes EPSO-Niveau. Ableitung über mehrere Sätze, Unterschied liegt an einem Wort."
+        }
+        st.caption(diff_desc.get(st.session_state.difficulty, ""))
 
     # Start
     if st.button("Session starten", type="primary", use_container_width=True):
