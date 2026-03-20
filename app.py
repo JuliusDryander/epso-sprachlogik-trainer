@@ -141,6 +141,8 @@ def generate_ai_question(api_key, previous_topics=""):
 - Der Text hat moderate Komplexität mit einigen Einschränkungen.
 - Manche Optionen kurz (1 Satz), manche lang (2 Sätze)."""
 
+        example_correct = random.choice(["A", "B", "C", "D"])
+
         system = f"""Du bist Dr. Elena Varga, Senior-Testentwicklerin bei EPSO mit 15 Jahren Erfahrung in der Erstellung von Verbal-Reasoning-Aufgaben für EU-Auswahlverfahren (AD5, AD7, AST). Du hast über 3.000 Aufgaben für echte EPSO-Prüfungen erstellt und bist spezialisiert auf die deutsche Sprachversion.
 
 DEINE EXPERTISE:
@@ -177,10 +179,19 @@ ANTWORTOPTIONEN:
 - Die richtige Antwort darf NICHT die offensichtlichste oder längste sein
 - Mindestens ein Distraktor muss den ersten Halbsatz mit dem Text teilen, aber im zweiten Teil abweichen
 
+KRITISCHE VALIDIERUNG (Pflicht vor Ausgabe):
+- Es darf EXAKT EINE richtige Antwort geben. Prüfe JEDE Option einzeln gegen den Text.
+- Eine Option die den Text korrekt wiedergibt, ist KEINE gültige falsche Option. Sie muss mindestens ein Detail verändern, hinzufügen oder weglassen.
+- Wenn eine falsche Option fast wörtlich im Text steht, MUSS sie ein Detail verfälschen (z.B. "23%" → "fast ein Viertel" reicht NICHT als Verfälschung; "23%" → "mehr als 30%" schon).
+- Falsche Optionen dürfen NICHT bloß korrekte Textaussagen in anderen Worten wiedergeben — das wäre eine zweite richtige Antwort.
+- Prüfe besonders: Kann ein aufmerksamer Leser argumentieren, dass eine "falsche" Option doch stimmt? Wenn ja, formuliere sie um.
+
 Vermeide diese bereits verwendeten Themen: {previous_topics}
 
 FORMAT (NUR valides JSON, kein anderer Text, keine Markdown-Formatierung):
-{{"text":"...","question_type":"correct","options":[{{"letter":"A","statement":"..."}},{{"letter":"B","statement":"..."}},{{"letter":"C","statement":"..."}},{{"letter":"D","statement":"..."}}],"correct":"B","explanation":"Für jede Option: warum richtig/falsch + Nicht-Übereinstimmungstyp","trap_type":"{trap}"}}"""
+{{"text":"...","question_type":"correct","options":[{{"letter":"A","statement":"..."}},{{"letter":"B","statement":"..."}},{{"letter":"C","statement":"..."}},{{"letter":"D","statement":"..."}}],"correct":"{example_correct}","explanation":"Für jede Option: warum richtig/falsch + Nicht-Übereinstimmungstyp","trap_type":"{trap}"}}
+
+WICHTIG: Die richtige Antwort für DIESE Aufgabe MUSS {example_correct} sein. Stelle sicher, dass Option {example_correct} die einzig korrekte Antwort ist."""
 
         msg = client.messages.create(
             model="claude-sonnet-4-20250514",
@@ -441,7 +452,62 @@ def show_question():
     remaining = max(0, TIME_LIMIT - elapsed)
     s = st.session_state.stats
 
-    # Timer using st.columns (native Streamlit — no broken HTML)
+    # Floating timer — always visible via JavaScript injection into parent frame
+    if not st.session_state.answered:
+        mins = remaining // 60
+        secs = remaining % 60
+        color = "#0d7c3f" if remaining > 60 else ("#d4620a" if remaining > 30 else "#c0272d")
+        pct_bar = remaining / TIME_LIMIT * 100
+        bar_color = color
+        pulse = "animation:pulse 0.8s infinite;" if remaining <= 15 else ""
+
+        import streamlit.components.v1 as components
+        components.html(f"""
+        <script>
+        (function() {{
+            var id = 'epso-floating-timer';
+            var parent = window.parent.document;
+            var existing = parent.getElementById(id);
+            if (existing) existing.remove();
+
+            var div = parent.createElement('div');
+            div.id = id;
+            div.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px;">
+                    <span style="font-size:13px;color:#6b7280;font-weight:600">{len(session)+1}/{size}</span>
+                    <span style="font-size:28px;font-weight:800;color:{color};font-variant-numeric:tabular-nums;{pulse}">{mins}:{secs:02d}</span>
+                    <span style="font-size:13px"><span style="color:#0d7c3f;font-weight:700">{s['correct']}</span><span style="color:#d1d5db"> : </span><span style="color:#c0272d;font-weight:700">{s['wrong']+s['timeout']}</span></span>
+                </div>
+                <div style="height:3px;background:#eef0f2;margin-top:6px;border-radius:2px">
+                    <div style="height:3px;width:{pct_bar}%;background:{bar_color};border-radius:2px;transition:width 1s linear"></div>
+                </div>
+            `;
+            div.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(680px,100%);background:white;z-index:99999;padding:8px 0 4px;box-shadow:0 2px 8px rgba(0,0,0,0.08);font-family:Inter,Arial,sans-serif;border-radius:0 0 10px 10px;';
+
+            var style = parent.createElement('style');
+            style.textContent = '@keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:0.35}}}}';
+            if (!parent.getElementById('epso-pulse-style')) {{
+                style.id = 'epso-pulse-style';
+                parent.head.appendChild(style);
+            }}
+
+            parent.body.appendChild(div);
+        }})();
+        </script>
+        """, height=0)
+    else:
+        # Remove floating timer when answered
+        import streamlit.components.v1 as components
+        components.html("""
+        <script>
+        (function() {
+            var el = window.parent.document.getElementById('epso-floating-timer');
+            if (el) el.remove();
+        })();
+        </script>
+        """, height=0)
+
+    # Regular header (visible without scroll, backup)
     c1, c2, c3 = st.columns([2, 3, 2])
     with c1:
         st.markdown(f"**{len(session)+1}** / {size}")
