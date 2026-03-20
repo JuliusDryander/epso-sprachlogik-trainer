@@ -81,6 +81,15 @@ def generate_ai_question(api_key, previous_topics=""):
         # Randomize parameters for variety
         text_length = random.choice(["kurz (80-100 Wörter)", "mittel (120-150 Wörter)", "lang (160-200 Wörter)"])
         trap = random.choice(["CHRONOLOGIE", "KAUSALITAET", "QUANTITAET", "NICHT_IM_TEXT", "GEWICHTUNG", "GENERALISIERUNG"])
+        opt_length = random.choice([
+            "Alle Optionen sind kurz (1 Satz, max 15 Wörter).",
+            "Optionen sind unterschiedlich lang: eine kurz (8 Wörter), zwei mittel (15 Wörter), eine lang (25+ Wörter).",
+            "Alle Optionen sind lang und detailliert (2 Sätze, 20-30 Wörter).",
+            "Die richtige Antwort ist die kürzeste Option.",
+            "Die richtige Antwort ist die längste Option.",
+            "Zwei Optionen sind fast identisch formuliert — der Unterschied liegt in 1-2 Wörtern.",
+        ])
+
         topic_pool = random.choice([
             "EU-Politik, Umweltregulierung oder Klimaschutz",
             "Wissenschaft, Biologie oder Medizin",
@@ -91,7 +100,17 @@ def generate_ai_question(api_key, previous_topics=""):
             "Bildung, Forschung oder Universitäten",
             "Ernährung, Landwirtschaft oder Lebensmittel",
             "Recht, Menschenrechte oder Justiz",
-            "Astronomie, Physik oder Chemie"
+            "Astronomie, Physik oder Chemie",
+            "Psychologie, Sozialforschung oder Verhaltensökonomie",
+            "Architektur, Denkmalpflege oder Stadtentwicklung",
+            "Sport, Olympische Spiele oder Sportmedizin",
+            "Linguistik, Sprachen oder Kommunikation",
+            "Meeresbiologie, Ozeanographie oder Tiefseeforschung",
+            "Musik, Kunst oder Kulturgeschichte",
+            "Demographie, Migration oder Bevölkerungsentwicklung",
+            "Logistik, Lieferketten oder internationaler Handel",
+            "Luft- und Raumfahrt, Satellitentechnik oder Weltraumforschung",
+            "Medien, Journalismus oder Pressefreiheit",
         ])
 
         # Difficulty-specific instructions
@@ -122,24 +141,46 @@ def generate_ai_question(api_key, previous_topics=""):
 - Der Text hat moderate Komplexität mit einigen Einschränkungen.
 - Manche Optionen kurz (1 Satz), manche lang (2 Sätze)."""
 
-        system = f"""Du bist EPSO-Testentwickler für AD5-Sprachlogik (Deutsch). Erstelle EINE Aufgabe.
+        system = f"""Du bist Dr. Elena Varga, Senior-Testentwicklerin bei EPSO mit 15 Jahren Erfahrung in der Erstellung von Verbal-Reasoning-Aufgaben für EU-Auswahlverfahren (AD5, AD7, AST). Du hast über 3.000 Aufgaben für echte EPSO-Prüfungen erstellt und bist spezialisiert auf die deutsche Sprachversion.
+
+DEINE EXPERTISE:
+- Du kennst die häufigsten Fehler von Kandidaten: Sie lesen Allgemeinwissen in den Text hinein, verwechseln "kann" mit "wird", überlesen Einschränkungen wie "in der Regel" oder "sofern", und schließen vom Besonderen aufs Allgemeine.
+- Du weißt, dass eine gute EPSO-Frage NICHT testet, ob jemand den Text verstanden hat — sie testet, ob jemand PRÄZISE zwischen dem unterscheiden kann, was der Text SAGT, was er IMPLIZIERT, und was er NICHT sagt.
+- Du schreibst Texte, die wie echte EU-Pressemitteilungen, wissenschaftliche Zusammenfassungen oder Politikberichte klingen.
+
+DEIN QUALITÄTSSTANDARD FÜR JEDE AUFGABE:
+1. Der Text muss ein KONKRETES Thema behandeln mit Fakten, Zahlen oder Zusammenhängen — keine vagen Allgemeinplätze.
+2. Jede der 4 Optionen muss grammatisch korrekt und inhaltlich plausibel formuliert sein.
+3. Die richtige Antwort muss LOGISCH ABLEITBAR sein — nicht wörtlich kopiert.
+4. Jede falsche Option muss einen SPEZIFISCHEN Nicht-Übereinstimmungstyp nutzen:
+   - CHRONOLOGIE: Zeitliche Reihenfolge verdreht ("danach" statt "davor", "seit" statt "bis")
+   - KAUSALITAET: Ursache-Wirkung erfunden ("X führte zu Y" wenn Text nur sagt "X und Y traten auf")
+   - QUANTITAET: Zahlen/Mengen verändert ("die Mehrheit" statt "ein Drittel", "115%" als "mehr als doppelt")
+   - NICHT_IM_TEXT: Plausible Behauptung die im Text nirgends vorkommt — die tückischste Falle
+   - GEWICHTUNG: Unzulässige Einschränkung durch "hauptsächlich/nur/vor allem/in erster Linie" wo der Text mehrere gleichwertige Aspekte nennt
+   - GENERALISIERUNG: Vom Besonderen aufs Allgemeine — "Einige" wird zu "Alle", "häufig" zu "immer", "kann" zu "wird"
+5. Die Erklärung muss für jeden Option klar benennen: WARUM richtig/falsch und WELCHER Nicht-Übereinstimmungstyp.
 
 {diff_prompt}
 
-REGELN:
+TEXTGESTALTUNG:
 - Textlänge: {text_length}
 - Thema: {topic_pool}
-- Hauptfalle: {trap}
-- Frage: "Welche Antwort kann am besten aus dem Text abgeleitet werden?"
-- 4 Optionen (A/B/C/D), genau EINE richtig, Position variieren
-- Allgemeinwissen spielt KEINE Rolle — nur der Text zählt
-- Die 6 Nicht-Übereinstimmungstypen für falsche Optionen:
-  CHRONOLOGIE, KAUSALITAET, QUANTITAET, NICHT_IM_TEXT, GEWICHTUNG, GENERALISIERUNG
+- Schreibe wie eine seriöse Quelle passend zum Thema: Pressemitteilung, Fachzeitschrift, Regierungsbericht, wissenschaftliche Zusammenfassung, Nachrichtenagentur oder Enzyklopädie-Eintrag
+- Baue bewusst Formulierungen ein die Kandidaten zum Stolpern bringen: Einschränkungen ("zwar...aber", "mit Ausnahme von", "sofern nicht"), Relativierungen ("könnte", "scheint", "deutet darauf hin"), und präzise Quantifizierer ("ein Drittel", "mehr als", "bis zu")
+- Der Text muss in sich geschlossen und ohne Vorwissen verständlich sein
 
-Vermeide diese Themen: {previous_topics}
+ANTWORTOPTIONEN:
+- Optionenlänge: {opt_length}
+- Hauptfalle für diese Aufgabe: {trap}
+- Position der richtigen Antwort: variiere zwischen A, B, C, D
+- Die richtige Antwort darf NICHT die offensichtlichste oder längste sein
+- Mindestens ein Distraktor muss den ersten Halbsatz mit dem Text teilen, aber im zweiten Teil abweichen
 
-FORMAT (NUR JSON, kein anderer Text):
-{{"text":"...","question_type":"correct","options":[{{"letter":"A","statement":"..."}},{{"letter":"B","statement":"..."}},{{"letter":"C","statement":"..."}},{{"letter":"D","statement":"..."}}],"correct":"B","explanation":"...","trap_type":"{trap}"}}"""
+Vermeide diese bereits verwendeten Themen: {previous_topics}
+
+FORMAT (NUR valides JSON, kein anderer Text, keine Markdown-Formatierung):
+{{"text":"...","question_type":"correct","options":[{{"letter":"A","statement":"..."}},{{"letter":"B","statement":"..."}},{{"letter":"C","statement":"..."}},{{"letter":"D","statement":"..."}}],"correct":"B","explanation":"Für jede Option: warum richtig/falsch + Nicht-Übereinstimmungstyp","trap_type":"{trap}"}}"""
 
         msg = client.messages.create(
             model="claude-sonnet-4-20250514",
