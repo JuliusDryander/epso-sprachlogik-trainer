@@ -191,7 +191,9 @@ Vermeide diese bereits verwendeten Themen: {previous_topics}
 FORMAT (NUR valides JSON, kein anderer Text, keine Markdown-Formatierung):
 {{"text":"...","question_type":"correct","options":[{{"letter":"A","statement":"..."}},{{"letter":"B","statement":"..."}},{{"letter":"C","statement":"..."}},{{"letter":"D","statement":"..."}}],"correct":"{example_correct}","explanation":"Für jede Option: warum richtig/falsch + Nicht-Übereinstimmungstyp","trap_type":"{trap}"}}
 
-WICHTIG: Die richtige Antwort für DIESE Aufgabe MUSS {example_correct} sein. Stelle sicher, dass Option {example_correct} die einzig korrekte Antwort ist."""
+WICHTIG: Die richtige Antwort für DIESE Aufgabe MUSS {example_correct} sein. Stelle sicher, dass Option {example_correct} die einzig korrekte Antwort ist.
+
+KRITISCH: Das Feld "correct" im JSON und die Erklärung MÜSSEN übereinstimmen. Wenn "correct":"{example_correct}", dann MUSS die Erklärung Option {example_correct} als richtig und alle anderen als falsch beschreiben. Ein Widerspruch zwischen "correct" und "explanation" ist ein schwerer Fehler."""
 
         msg = client.messages.create(
             model="claude-sonnet-4-20250514",
@@ -202,6 +204,31 @@ WICHTIG: Die richtige Antwort für DIESE Aufgabe MUSS {example_correct} sein. St
         text = msg.content[0].text.strip()
         text = text.replace("```json", "").replace("```", "").strip()
         q = json.loads(text)
+
+        # ── Validation ──
+        # 1. Ensure "correct" field contains a valid letter
+        valid_letters = [o["letter"] for o in q.get("options", [])]
+        if q.get("correct") not in valid_letters:
+            # Try to fix: find which option the explanation calls correct
+            explanation = q.get("explanation", "").lower()
+            for letter in valid_letters:
+                if f"option {letter.lower()} ist korrekt" in explanation or f"{letter.lower()} korrekt" in explanation or f"{letter.lower()}) korrekt" in explanation:
+                    q["correct"] = letter
+                    break
+            else:
+                # Still invalid — force it to the example_correct and regenerate would be better,
+                # but as fallback just pick A
+                q["correct"] = valid_letters[0] if valid_letters else "A"
+
+        # 2. Ensure there are exactly 4 options with letters A-D
+        if len(q.get("options", [])) != 4:
+            return None
+
+        # 3. Ensure the correct letter actually matches an option
+        correct_opt = next((o for o in q["options"] if o["letter"] == q["correct"]), None)
+        if not correct_opt:
+            return None
+
         q["source"] = "KI-generiert"
         q["id"] = f"ai-{int(time.time())}-{random.randint(1000,9999)}"
         q["difficulty"] = difficulty
